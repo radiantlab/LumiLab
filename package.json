@@ -87,7 +87,7 @@
     "prepare": "lefthook install || true",
     "typecheck": "tsc --noEmit"
   },
-  "version": "5.0.0",
+  "version": "5.0.1",
   "private": true,
   "overrides": {
     "@types/react": "19.1.8",
