@@ -13,7 +13,7 @@
 
 ## Global Constraints
 
-- **Set positions are 1-based everywhere** — display text, `beginSet`, the `RunRecord.id` suffix, and Rust's `set_index`. Never mix a 0-based array index into a position. The one exception is `imageSetIssues`, which is keyed by array index because `ImageMatrixInput` maps rows with `value.map((row, index) => …)`; convert with `position - 1` at that single call site and nowhere else.
+- **Set positions are 1-based everywhere**: display text, `beginSet`, the `RunRecord.id` suffix, and Rust's `set_index`. Never mix a 0-based array index into a position. The one exception is `imageSetIssues`, which is keyed by array index because `ImageMatrixInput` maps rows with `value.map((row, index) => …)`; convert with `position - 1` at that single call site and nowhere else.
 - **#183's calibration wording is verbatim and must not drift:** title `Not all calibration files have been uploaded`, question `Did you mean to not upload them all, or do you want to go back?`, confirm button `Generate anyway`, cancel button `Go back`. A single set with incomplete calibration files must produce exactly today's dialog.
 - **Do not use em dashes in prose** (project-wide writing rule). Comments and copy included.
 - **`describeRunBlocker` runs once, before the loop**, against the global config and the *selected preview image's* dimensions. Per-set mask validation is explicitly out of scope; do not move this call inside the loop.
@@ -616,7 +616,7 @@ This is where the behaviour of the feature lives: does a failure stop the queue,
 **Interfaces:**
 - Consumes: `ImageSet` from `@/components/ui/image-set-preview` (shape `{ files: string[]; name: string }`).
 - Produces:
-  - `interface SetPosition { position: number; set: ImageSet; total: number }` — `position` is 1-based.
+  - `interface SetPosition { position: number; set: ImageSet; total: number }`: `position` is 1-based.
   - `interface BatchSummary { failed: number; skipped: number; succeeded: number; total: number }`
   - `async function runBatch(options: { onBeginSet?: (at: SetPosition) => void; runSet: (at: SetPosition) => Promise<void>; sets: ImageSet[]; shouldStop?: () => boolean }): Promise<BatchSummary>`
   - Task 7 supplies `runSet` and `shouldStop`; Task 5's `beginSet` is what `onBeginSet` calls.
@@ -1063,7 +1063,7 @@ A second dialog for the shared-settings notice would mean answering two prompts 
 - Consumes: `usePendingConfirmation<T>` (unchanged; its subject simply becomes a richer object).
 - Produces:
   - `interface RunConfirmation { setCount: number; unsupplied: string[] }`
-  - `function describeRunConfirmation(setCount: number, unsupplied: string[]): RunConfirmation | null` — null means there is nothing to ask about.
+  - `function describeRunConfirmation(setCount: number, unsupplied: string[]): RunConfirmation | null`: null means there is nothing to ask about.
   - `function RunConfirmDialog({ confirmation, onDecision }: { confirmation: RunConfirmation | null; onDecision: (proceed: boolean) => void })`
   - Task 7 renders it and calls `describeRunConfirmation`.
 

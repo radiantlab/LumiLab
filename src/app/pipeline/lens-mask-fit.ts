@@ -7,7 +7,7 @@ import type { MaskBox } from "./build-pipeline-params";
  * `crop` cuts out the square circumscribing the mask circle, so the whole
  * square has to lie inside the picture. Radiance is only told about the
  * y axis, and rejects a square that hangs off the top or bottom
- * (`crop.rs`) — but a square hanging off the left or right is not rejected,
+ * (`crop.rs`), but a square hanging off the left or right is not rejected,
  * `pcompos` just pads the missing columns with black. Both are checked here,
  * because both produce a picture the user did not ask for.
  *

@@ -114,7 +114,7 @@ export function ImageSetPreview({
             <TooltipTrigger>
               <ContextMenu>
                 <ContextMenuTrigger asChild>
-                  {/* biome-ignore lint/a11y/useSemanticElements: a real <button> can't be used here — this is already nested inside the <button> that Radix's TooltipTrigger renders by default, and a button-in-button is invalid HTML. */}
+                  {/* biome-ignore lint/a11y/useSemanticElements: a real <button> can't be used here: this is already nested inside the <button> that Radix's TooltipTrigger renders by default, and a button-in-button is invalid HTML. */}
                   <div
                     className="generic-image-container size-48 shrink-0 bg-accent"
                     onClick={() => onClick(file)}

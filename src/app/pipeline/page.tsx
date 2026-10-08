@@ -242,7 +242,7 @@ export default function Home() {
   const { control, register, setValue, watch } = form;
   const formValues = watch();
   // keep the global pipeline config in sync with the form values
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally depend on the stringified value rather than the object reference — react-hook-form's watch() returns a new object every render, so depending on formValues/globalPipelineConfig.set directly reruns this effect (and re-renders) every render, causing an infinite loop.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally depend on the stringified value rather than the object reference; react-hook-form's watch() returns a new object every render, so depending on formValues/globalPipelineConfig.set directly reruns this effect (and re-renders) every render, causing an infinite loop.
   useEffect(() => {
     globalPipelineConfig.set(formValues);
   }, [JSON.stringify(formValues)]);

@@ -66,7 +66,7 @@
         // rows, mask-selection drag handlers) that close over per-item loop
         // variables and can't be hoisted to a stable top-level useCallback
         // without extracting a separate memoized list-item component per
-        // call site — a much larger structural change than a lint pass.
+        // call site, a much larger structural change than a lint pass.
         // This is a Tauri desktop app, not a render-heavy web app at scale,
         // so the re-render cost this rule guards against is negligible
         // here. Rather than force-fit useCallback in some places and leave
@@ -76,7 +76,7 @@
         // allocation-light closures.
         "noJsxPropsBind": "off",
         // This app builds with `output: "export"` (static export) for
-        // bundling into a Tauri desktop shell — there is no Next.js server
+        // bundling into a Tauri desktop shell; there is no Next.js server
         // to run the Image Optimization API at runtime. next/image would
         // need `images.unoptimized: true` (losing its main benefit) to even
         // load, and nothing in this codebase currently uses it, so plain
@@ -117,7 +117,7 @@
       // bounds", inside biome_module_graph::module_resolver) whenever it
       // tries to process these two files, likely due to the parenthesized
       // Next.js route-group directory segments in their paths ("(image)",
-      // "(tiff-image)"). This is a Biome bug, not a project preference —
+      // "(tiff-image)"). This is a Biome bug, not a project preference;
       // exclude them entirely so `ultracite check`/`fix` don't crash.
       "includes": [
         "src/app/pipeline/fs-circular-mas-selection.tsx",
@@ -199,7 +199,7 @@
       // module polyfilled there via path-browserify, for tiff.js/file-path
       // handling on user-selected files. next.config.js's webpack
       // `resolve.fallback` (and the Turbopack `resolveAlias`) only rewrite
-      // the bare "path" specifier to that polyfill, not "node:path" — using
+      // the bare "path" specifier to that polyfill, not "node:path"; using
       // the node: prefix here breaks `next build`, which failed with
       // "UnhandledSchemeError: Reading from 'node:path' is not handled by
       // plugins" when ultracite's unsafe fix rewrote these imports. Keep
@@ -223,7 +223,7 @@
       // Renaming this file to use-tiff-path.tsx would require editing its
       // only consumer's import statement, but that consumer
       // (tiff-image.tsx) is excluded from all Biome processing above due
-      // to an internal Biome crash — editing an excluded file's imports is
+      // to an internal Biome crash; editing an excluded file's imports is
       // out of scope for a lint fix. Scoped to this exact file only.
       "includes": ["src/components/ui/(image)/(tiff-image)/useTiffPath.tsx"],
       "linter": {

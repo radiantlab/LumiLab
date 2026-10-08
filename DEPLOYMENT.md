@@ -103,7 +103,7 @@ reasoning is in [`licenses/DECISIONS.md`](./licenses/DECISIONS.md).
 
 Safari is a first-class target and the browser suite runs WebKit first, because
 Safari implements no part of the File System Access API and therefore takes the
-plain file-input and download path — which is what this application ships to
+plain file-input and download path, which is what this application ships to
 everyone.
 
 The full pipeline is verified end to end in WebKit: the reference JPEG bracket

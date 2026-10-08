@@ -113,9 +113,9 @@ The image-processing tools are built from forks we maintain and committed as
 WebAssembly in `public/wasm/`. Rebuilding them is only necessary when bumping
 one of these; see [`public/wasm/README.md`](./public/wasm/README.md).
 
-- [radiantlab/Radiance](https://github.com/radiantlab/Radiance) — fork of [LBNL-ETA/Radiance](https://github.com/LBNL-ETA/Radiance)
-- [radiantlab/hdrgen](https://github.com/radiantlab/hdrgen) — fork of [radiance-org/hdrgen](https://github.com/radiance-org/hdrgen)
-- [radiantlab/LibRaw](https://github.com/radiantlab/LibRaw) (`dcraw_emu`) — fork of [LibRaw/LibRaw](https://github.com/LibRaw/LibRaw)
+- [radiantlab/Radiance](https://github.com/radiantlab/Radiance): fork of [LBNL-ETA/Radiance](https://github.com/LBNL-ETA/Radiance)
+- [radiantlab/hdrgen](https://github.com/radiantlab/hdrgen): fork of [radiance-org/hdrgen](https://github.com/radiance-org/hdrgen)
+- [radiantlab/LibRaw](https://github.com/radiantlab/LibRaw) (`dcraw_emu`): fork of [LibRaw/LibRaw](https://github.com/LibRaw/LibRaw)
 
 Contributions are currently limited to those working on the Architectural Lighting Design Capstone Project at Oregon State University. If you are interested in contributing, please contact the project authors.
 
@@ -161,7 +161,7 @@ npm run test:e2e:web      # builds ./out, then drives it in WebKit and Chromium
 npm run test:e2e:desktop  # builds the Tauri app, then drives it in its own webview
 ```
 
-There are two end-to-end suites because there have to be. Playwright cannot attach to a Tauri window: neither WKWebView nor WebKitGTK exposes a CDP endpoint for it to speak to. So [`e2e-web/`](./e2e-web) drives the browser build with Playwright and [`e2e-tests/`](./e2e-tests) drives the desktop build with WebdriverIO. They cover paths that genuinely differ — file dialogs versus dropped paths, downloads versus writes to a chosen folder — and they share the same input fixtures so they cannot drift apart while both stay green.
+There are two end-to-end suites because there have to be. Playwright cannot attach to a Tauri window: neither WKWebView nor WebKitGTK exposes a CDP endpoint for it to speak to. So [`e2e-web/`](./e2e-web) drives the browser build with Playwright and [`e2e-tests/`](./e2e-tests) drives the desktop build with WebdriverIO. They cover paths that genuinely differ (file dialogs versus dropped paths, downloads versus writes to a chosen folder), and they share the same input fixtures so they cannot drift apart while both stay green.
 
 The web suite runs **WebKit first**, deliberately. Safari implements no part of the File System Access API, so it takes the plain file-input and download path, which is what the application actually ships to everyone.
 

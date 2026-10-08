@@ -4,7 +4,7 @@
 
 **Goal:** Make RAW-to-TIFF conversions survive a page reload, so a 10-frame CR2 bracket costs ~19 s of demosaic once rather than on every visit.
 
-**Architecture:** A persistent tier sits behind the existing in-memory session tier, inside the RAW worker (`src/lib/raw-worker.ts`). The worker already holds the source bytes, so it hashes them, looks the hash up in a content-addressed blob store, and converts only on a miss. Blobs live in OPFS (or IndexedDB — Task 1 decides); a small index in IndexedDB carries sizes and last-used stamps, because OPFS exposes no access time and LRU eviction is unimplementable without it.
+**Architecture:** A persistent tier sits behind the existing in-memory session tier, inside the RAW worker (`src/lib/raw-worker.ts`). The worker already holds the source bytes, so it hashes them, looks the hash up in a content-addressed blob store, and converts only on a miss. Blobs live in OPFS (or IndexedDB; Task 1 decides); a small index in IndexedDB carries sizes and last-used stamps, because OPFS exposes no access time and LRU eviction is unimplementable without it.
 
 **Tech Stack:** TypeScript, Next.js static export, Web Workers, OPFS (`navigator.storage.getDirectory`), IndexedDB, Jest + jsdom for unit tests, Playwright (`e2e-web`) and WebdriverIO (`e2e-tests`) for browser and desktop.
 
@@ -35,15 +35,15 @@
 | `src/lib/raw-cache-opfs.ts` | `opfsBlobStore()`. The only file that touches OPFS. |
 | `e2e-web/tests/storage-probe.spec.ts` | Task 1's compatibility probe. |
 
-> **Deviation from the spec, noted deliberately:** the design's component table lists three new files; this plan has four, splitting key derivation (`raw-cache-key.ts`) from storage (`raw-cache.ts`). They have different dependencies — the key needs `dcrawArgs` and `versions.json`, the store needs IndexedDB — and mixing them would make the cache untestable without stubbing a fetch.
+> **Deviation from the spec, noted deliberately:** the design's component table lists three new files; this plan has four, splitting key derivation (`raw-cache-key.ts`) from storage (`raw-cache.ts`). They have different dependencies (the key needs `dcrawArgs` and `versions.json`, the store needs IndexedDB), and mixing them would make the cache untestable without stubbing a fetch.
 
 **Modify:**
 
-- `src/lib/presets.ts` — re-export `sha256Hex` from `hash.ts` (Task 2).
-- `src/lib/storage/kv.ts` — add `updateDocument` (Task 3).
-- `src/lib/raw-worker.ts` — consult and populate the cache (Task 8).
-- `src/app/settings-page/page.tsx` — usage read-out and Clear button (Task 9).
-- `e2e-web/tests/perf.bench.ts` — reload-survival measurement (Task 10).
+- `src/lib/presets.ts`: re-export `sha256Hex` from `hash.ts` (Task 2).
+- `src/lib/storage/kv.ts`: add `updateDocument` (Task 3).
+- `src/lib/raw-worker.ts`: consult and populate the cache (Task 8).
+- `src/app/settings-page/page.tsx`: usage read-out and Clear button (Task 9).
+- `e2e-web/tests/perf.bench.ts`: reload-survival measurement (Task 10).
 
 ---
 
@@ -57,7 +57,7 @@ Gates the backend choice. Produces a compatibility table, not a feature. **Do no
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: a decision — approach **A** (OPFS blobs) or **B** (IndexedDB blobs) — which Task 7 implements.
+- Produces: a decision, approach **A** (OPFS blobs) or **B** (IndexedDB blobs), which Task 7 implements.
 
 - [ ] **Step 1: Write the probe**
 
@@ -217,7 +217,7 @@ npm --prefix e2e-web exec playwright test tests/storage-probe.spec.ts --project=
 npm --prefix e2e-web exec playwright test tests/storage-probe.spec.ts --project=chromium
 ```
 
-Expected: PASS on both, with a `===STORAGE_PROBE===` block printed. WebKit is the one to watch — Safari has a history of OPFS write bugs.
+Expected: PASS on both, with a `===STORAGE_PROBE===` block printed. WebKit is the one to watch; Safari has a history of OPFS write bugs.
 
 - [ ] **Step 3: Run it on the desktop hosts**
 
@@ -277,7 +277,7 @@ This records what each engine actually does with a converted-frame-sized blob."
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: `sha256Hex(bytes: Uint8Array): Promise<string>` — lowercase hex, 64 chars.
+- Produces: `sha256Hex(bytes: Uint8Array): Promise<string>`, lowercase hex, 64 chars.
 
 Why: `presets.ts` imports `pipelineConfig` from a React config provider, so importing it into a worker would drag React into the worker bundle.
 
@@ -310,7 +310,7 @@ describe("sha256Hex", () => {
 - [ ] **Step 2: Run it and watch it fail**
 
 Run: `npx jest src/lib/hash.test.ts`
-Expected: FAIL — `Cannot find module './hash'`.
+Expected: FAIL, `Cannot find module './hash'`.
 
 - [ ] **Step 3: Create the module**
 
@@ -372,7 +372,7 @@ hash function would pull React into the worker bundle."
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: `updateDocument<T>(key: string, change: (current: T | undefined) => T): Promise<T>` — reads, applies `change`, writes, all inside one IndexedDB transaction, and returns the written value.
+- Produces: `updateDocument<T>(key: string, change: (current: T | undefined) => T): Promise<T>`. It reads, applies `change`, writes, all inside one IndexedDB transaction, and returns the written value.
 
 Why: the cache index is a read-modify-write. `run()` puts one request per transaction, so a get-then-put via two calls can interleave with the Settings "Clear" action and lose an update.
 
@@ -430,7 +430,7 @@ import "fake-indexeddb/auto";
 - [ ] **Step 2: Run it and watch it fail**
 
 Run: `npx jest src/lib/storage/kv.test.ts`
-Expected: FAIL — `updateDocument is not a function`.
+Expected: FAIL, `updateDocument is not a function`.
 
 - [ ] **Step 3: Implement it**
 
@@ -639,7 +639,7 @@ describe("the persistent RAW cache", () => {
 - [ ] **Step 3: Run it and watch it fail**
 
 Run: `npx jest src/lib/raw-cache.test.ts`
-Expected: FAIL — `Cannot find module './raw-cache'`.
+Expected: FAIL, `Cannot find module './raw-cache'`.
 
 - [ ] **Step 4: Implement**
 
@@ -809,7 +809,7 @@ navigator.storage does not exist under Jest."
 
 ---
 
-### Task 5: Reconciliation — orphan sweep
+### Task 5: Reconciliation (orphan sweep)
 
 Task 4 already self-heals phantoms. This adds the other half.
 
@@ -881,7 +881,7 @@ describe("reconciliation", () => {
 - [ ] **Step 2: Run and watch it fail**
 
 Run: `npx jest src/lib/raw-cache.test.ts -t reconciliation`
-Expected: FAIL — `cache.sweep is not a function`.
+Expected: FAIL, `cache.sweep is not a function`.
 
 - [ ] **Step 3: Implement**
 
@@ -972,8 +972,8 @@ is swept once per session."
 **Interfaces:**
 - Consumes: `sha256Hex` (Task 2), `dcrawArgs` from `./pipeline/stages`.
 - Produces:
-  - `toolTag(wasmBaseUrl: string): Promise<string>` — 12 hex chars, memoised per URL.
-  - `rawCacheKey(bytes: Uint8Array, tag: string): Promise<string>` — `"<64 hex>-<12 hex>"`.
+  - `toolTag(wasmBaseUrl: string): Promise<string>`: 12 hex chars, memoised per URL.
+  - `rawCacheKey(bytes: Uint8Array, tag: string): Promise<string>`: `"<64 hex>-<12 hex>"`.
   - `resetToolTagForTests(): void`
 
 - [ ] **Step 1: Write the failing test**
@@ -1046,7 +1046,7 @@ describe("the RAW cache key", () => {
 - [ ] **Step 2: Run and watch it fail**
 
 Run: `npx jest src/lib/raw-cache-key.test.ts`
-Expected: FAIL — `Cannot find module './raw-cache-key'`.
+Expected: FAIL, `Cannot find module './raw-cache-key'`.
 
 - [ ] **Step 3: Implement**
 
@@ -1152,9 +1152,9 @@ stops a rebuilt dcraw_emu from silently serving the previous demosaic."
 
 ---
 
-### Task 7: The blob store — IndexedDB (approach B, decided by Task 1)
+### Task 7: The blob store, IndexedDB (approach B, decided by Task 1)
 
-**Task 1 decided this.** The probe found `navigator.storage.getDirectory` **absent** in both WebKit (Playwright, CI) and WebKitGTK 605.1.15 (Tauri's Linux webview): `opfsAvailable: false`, `quota: null`. That is not a quota or memory failure — the API does not exist. OPFS worked in Chromium and WebView2. By the rule stated in advance ("OPFS fails or corrupts on **any** engine -> approach B"), two of five engines have no OPFS at all, so approach A is dead. Approach C (OPFS with an IndexedDB fallback) stays rejected: #243 warns that a second caching implementation is the thing that drifts.
+**Task 1 decided this.** The probe found `navigator.storage.getDirectory` **absent** in both WebKit (Playwright, CI) and WebKitGTK 605.1.15 (Tauri's Linux webview): `opfsAvailable: false`, `quota: null`. That is not a quota or memory failure; the API does not exist. OPFS worked in Chromium and WebView2. By the rule stated in advance ("OPFS fails or corrupts on **any** engine -> approach B"), two of five engines have no OPFS at all, so approach A is dead. Approach C (OPFS with an IndexedDB fallback) stays rejected: #243 warns that a second caching implementation is the thing that drifts.
 
 IndexedDB round-tripped 67 MB on every engine tested, including both WebKits.
 
@@ -1166,7 +1166,7 @@ IndexedDB round-tripped 67 MB on every engine tested, including both WebKits.
 - Consumes: `BlobStore` (Task 4).
 - Produces: `idbBlobStore(): BlobStore`, `blobStoreAvailable(): boolean`.
 
-**On what the unit test is for.** It proves our *use* of the API: that a written blob reads back identical, that a missing key is `undefined` rather than a throw, and that `keys()` and `remove()` behave. `fake-indexeddb` is already wired (Task 3), so this is testable in Jest directly — unlike OPFS, which was the original reason this task was going to go untested.
+**On what the unit test is for.** It proves our *use* of the API: that a written blob reads back identical, that a missing key is `undefined` rather than a throw, and that `keys()` and `remove()` behave. `fake-indexeddb` is already wired (Task 3), so this is testable in Jest directly, unlike OPFS, which was the original reason this task was going to go untested.
 
 - [ ] **Step 1: Add the object store**
 
@@ -1295,7 +1295,7 @@ describe("the IndexedDB blob store", () => {
 - [ ] **Step 3: Run and watch it fail**
 
 Run: `npx jest src/lib/raw-cache-idb.test.ts`
-Expected: FAIL — `Cannot find module './raw-cache-idb'`.
+Expected: FAIL, `Cannot find module './raw-cache-idb'`.
 
 - [ ] **Step 4: Implement**
 
@@ -1476,7 +1476,7 @@ describe("converting with the persistent cache", () => {
 - [ ] **Step 2: Run and watch it fail**
 
 Run: `npx jest src/lib/raw-worker.test.ts`
-Expected: FAIL — `convertWithCache is not a function`.
+Expected: FAIL, `convertWithCache is not a function`.
 
 - [ ] **Step 3: Implement**
 
@@ -1745,7 +1745,7 @@ MODE=cr2 FRAMES=3 npm --prefix e2e-web run bench
 git stash pop
 ```
 
-Expected: `secondImportMs` within noise of `runMs` — about 6000 ms for 3 frames, because nothing is cached.
+Expected: `secondImportMs` within noise of `runMs`, about 6000 ms for 3 frames, because nothing is cached.
 
 - [ ] **Step 3: Measure with it on**
 
@@ -1754,7 +1754,7 @@ npm run build
 MODE=cr2 FRAMES=3 npm --prefix e2e-web run bench
 ```
 
-Expected: `secondImportMs` falls to a small fraction of `runMs` — the demosaic is skipped and only the IndexedDB read and TIFF decode remain. `requests.wasm` should stay at 2; a rise would mean the worker is being rebuilt.
+Expected: `secondImportMs` falls to a small fraction of `runMs`; the demosaic is skipped and only the IndexedDB read and TIFF decode remain. `requests.wasm` should stay at 2; a rise would mean the worker is being rebuilt.
 
 - [ ] **Step 4: Record the numbers**
 
@@ -1780,4 +1780,4 @@ tab, empty session tier, so any saving is the persistent tier's."
 
 **Type consistency.** `BlobStore` is `read`/`write`/`remove`/`keys` throughout. `RawCache` gains `sweep` in Task 5 and the Task 8 fake implements all five members. `rawCacheKey(bytes, tag)` and `toolTag(wasmBaseUrl)` match between Tasks 6 and 8. `createRawCache({ store, budgetBytes?, now? })` matches across Tasks 4, 5, 8 and 9.
 
-**One deviation, deliberate:** Task 7 uses `createWritable` rather than the `createSyncAccessHandle` named in the issue. The sync handle is what forces this tier into a worker, and that constraint still holds and still shapes the architecture — but holding an exclusive lock across an await is a deadlock, and conversions are already serialised so the throughput difference never reaches the user. Flagged for the reviewer to overturn if Task 1 shows `createWritable` is the slow path on some host.
+**One deviation, deliberate:** Task 7 uses `createWritable` rather than the `createSyncAccessHandle` named in the issue. The sync handle is what forces this tier into a worker, and that constraint still holds and still shapes the architecture, but holding an exclusive lock across an await is a deadlock, and conversions are already serialised so the throughput difference never reaches the user. Flagged for the reviewer to overturn if Task 1 shows `createWritable` is the slow path on some host.

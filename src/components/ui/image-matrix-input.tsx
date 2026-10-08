@@ -139,7 +139,7 @@ export function ImageMatrixInput<
       const groups = new Map<string, ImageSet>();
       for (const rawPath of files.toSorted((a, b) => a.localeCompare(b))) {
         console.log("rawPath", rawPath);
-        // biome-ignore lint/performance/noAwaitInLoops: sequential awaits are intentional here — switching to Promise.all would change error-handling semantics (first-failure vs. all-settled) and possibly ordering-dependent grouping behavior in file-set matching.
+        // biome-ignore lint/performance/noAwaitInLoops: sequential awaits are intentional here; switching to Promise.all would change error-handling semantics (first-failure vs. all-settled) and possibly ordering-dependent grouping behavior in file-set matching.
         const fileStats = await stat(rawPath);
         const { isFile } = fileStats;
         const fileDir = isFile ? path.dirname(rawPath) : rawPath;
