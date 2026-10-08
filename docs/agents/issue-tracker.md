@@ -27,7 +27,8 @@ history.
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** Pull requests come from the capstone team or
-Dependabot and go through the review loop in `AGENTS.md`, not through triage.
+Dependabot and go through the review loop in step 5 of `CONTRIBUTING.md`, not
+through triage.
 
 GitHub shares one number space across issues and PRs, so a bare `#42` may be either;
 resolve with `gh pr view 42` and fall back to `gh issue view 42`.
