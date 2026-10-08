@@ -1,8 +1,8 @@
 # Triage labels
 
 The engineering skills speak in five canonical triage roles. Four map to a label of
-the same name; `wontfix` maps to GitHub's own close reason instead of a label. A
-triaged issue carries one state label from this table and one category label.
+the same name; `wontfix` maps to GitHub's own close reason instead of a label. An
+open triaged issue carries one state label from this table and one category label.
 
 | Role (skills)     | Here                                         | Meaning                                                             |
 | ----------------- | -------------------------------------------- | ------------------------------------------------------------------- |
