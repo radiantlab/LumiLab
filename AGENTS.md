@@ -54,7 +54,8 @@ A tool enforces the first five, so a refusal names the rule you hit.
   raises nothing you have not answered; answered means fixed or declined in
   writing, so a pass whose findings you all declined ends it. Verify a finding
   before acting: reviewers are sometimes confidently wrong. Record the pass count
-  and every decline under `## Review loop` in the PR. A harness that cannot run
+  and every decline under `## Review loop` in the PR, or in a PR comment on a
+  Dependabot PR, whose body the bot rewrites. A harness that cannot run
   the plugin says so there and reviews the diff against this file by hand. Then
   request the team member's review the `main` ruleset requires; green CI and the
   loop are not one.

@@ -1,8 +1,7 @@
 # Issue tracker: GitHub
 
 Issues for this repo live as GitHub issues on `radiantlab/LumiLab`. Use the `gh`
-CLI for all operations. Inside the Claude Code Bash sandbox `gh` fails its TLS
-check (`x509: OSStatus -26276`), so run it with the sandbox off.
+CLI for all operations.
 
 ## What an issue is here
 
@@ -17,8 +16,8 @@ history.
   for a multi-line body. `.claude/hooks/guard-gh.mjs` refuses a body with an
   emdash, an emoji or a `claude.ai/code/session` link.
 - **Read an issue**: `gh issue view <number> --comments`.
-- **List issues**: `gh issue list --state open --json number,title,labels --jq ...`
-  with `--label` filters.
+- **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq ...`
+  with `--label` and `--state` filters.
 - **Comment**: `gh issue comment <number> --body "..."`.
 - **Labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`.
   The vocabulary is in [`triage-labels.md`](./triage-labels.md).
@@ -27,15 +26,15 @@ history.
 
 ## Pull requests as a triage surface
 
-**PRs as a request surface: no.** Every pull request comes from the capstone team
-and goes through the review loop in `AGENTS.md`, not through triage.
+**PRs as a request surface: no.** Pull requests come from the capstone team or
+Dependabot and go through the review loop in `AGENTS.md`, not through triage.
 
 GitHub shares one number space across issues and PRs, so a bare `#42` may be either;
 resolve with `gh pr view 42` and fall back to `gh issue view 42`.
 
 ## When a skill says "publish to the issue tracker"
 
-Create a GitHub issue and apply `ready-for-agent` or `ready-for-human`.
+Create a GitHub issue.
 
 ## When a skill says "fetch the relevant ticket"
 

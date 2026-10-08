@@ -16,9 +16,7 @@ Closes #
 
 ## Review loop
 
-<!-- AGENTS.md: mattpocock-skills:code-review against origin/main until a pass
-     raises nothing unanswered. State the pass count; a declined finding gets
-     one line with the reason. -->
+<!-- The loop in AGENTS.md. A declined finding gets one line with the reason. -->
 
 - Passes:
 - Declined:
