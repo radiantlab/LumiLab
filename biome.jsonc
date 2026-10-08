@@ -17,8 +17,7 @@
       "!public/logo",
       "!src/app/icon.svg",
       // Written by the Tauri CLI.
-      "!src-tauri/gen",
-      "!src-tauri/capabilities/migrated.json"
+      "!src-tauri/gen"
     ]
   },
   "linter": {

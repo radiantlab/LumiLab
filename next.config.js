@@ -27,7 +27,6 @@ const nextConfig = {
     "@tauri-apps/plugin-fs",
     "@tauri-apps/plugin-opener",
     "@tauri-apps/plugin-os",
-    "@tauri-apps/plugin-shell",
   ],
   turbopack: {
     // stub fs and path for client-side
