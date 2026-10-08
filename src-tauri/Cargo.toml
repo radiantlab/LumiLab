@@ -1,6 +1,6 @@
 [package]
 name = "LumiLab"
-version = "5.0.0"
+version = "5.0.1"
 description = "GUI to calibrate HDR images using Radiance, hdrgen, and dcraw_emu."
 authors = ["Clotilde Pierson", "Alexander Ulbrich"]
 license = "GNU General Public License v3.0"
