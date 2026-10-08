@@ -49,8 +49,15 @@ A tool enforces the first five, so a refusal names the rule you hit.
   Pre-commit hook, `guard-git.mjs`.
 - **Commit body:** a sentence or two on why, or none. Use a HEREDOC for more
   than one line. Keep the `Co-Authored-By` trailer the harness supplies.
-- **Every PR gets a review from a team member**, Dependabot's included; green
-  CI is not one.
+- **Review loop on every PR, Dependabot's included, then a team member's review.**
+  Run `mattpocock-skills:code-review` against `origin/main` and repeat until a pass
+  raises nothing you have not answered; answered means fixed or declined in
+  writing, so a pass whose findings you all declined ends it. Verify a finding
+  before acting: reviewers are sometimes confidently wrong. Record the pass count
+  and every decline under `## Review loop` in the PR. A harness that cannot run
+  the plugin says so there and reviews the diff against this file by hand. Then
+  request the team member's review the `main` ruleset requires; green CI and the
+  loop are not one.
 - **Bump the version in three places together:** `package.json`,
   `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`. `release.yml` refuses
   to build when they disagree.
@@ -60,6 +67,19 @@ A tool enforces the first five, so a refusal names the rule you hit.
 - **Check context7** for Next.js, Tauri and the WebdriverIO Tauri service rather
   than recalling them. Write no version numbers into these docs; the manifests
   have them.
+
+## Agent skills
+
+The `mattpocock-skills` plugin, enabled in `.claude/settings.json`, reads these.
+
+- Issue tracker: GitHub issues on `radiantlab/LumiLab` via `gh`; the issue is the
+  spec. `docs/agents/issue-tracker.md`.
+- Triage labels: the five canonical roles, label equal to role.
+  `docs/agents/triage-labels.md`.
+- Domain docs: single context, `CONTEXT.md` and `docs/adr/`, created as terms and
+  decisions are resolved. `docs/agents/domain.md`.
+- Code review: the fixed point, where the spec comes from, the standards sources.
+  `docs/agents/code-review.md`.
 
 ## Facts that are not obvious from the code
 

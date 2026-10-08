@@ -14,6 +14,15 @@ Closes #
 - `npm run test:e2e:desktop` (`src/lib/host/`, `src-tauri/`, or a host-specific path touched)
 - `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings` (Rust touched)
 
+## Review loop
+
+<!-- AGENTS.md: mattpocock-skills:code-review against origin/main until a pass
+     raises nothing unanswered. State the pass count; a declined finding gets
+     one line with the reason. -->
+
+- Passes:
+- Declined:
+
 ## Tauri permissions
 
 <!-- Only when src-tauri/capabilities/ changed: each permission added, and the
