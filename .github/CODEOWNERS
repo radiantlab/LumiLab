@@ -1,0 +1,8 @@
+# Paths where a change is a security or release decision. Takes effect for
+# merges once the main ruleset requires a code owner's review.
+/.github/                     @adulbrich
+/.claude/                     @adulbrich
+/src-tauri/capabilities/      @adulbrich
+/src-tauri/tauri.conf.json    @adulbrich
+/lefthook.yml                 @adulbrich
+/scripts/check-*.mjs          @adulbrich

@@ -1,0 +1,42 @@
+# The local gates, one per rule, each the same script CI runs. Set LEFTHOOK=0
+# or pass `git commit --no-verify` to skip; the Claude Code hooks in
+# `.claude/hooks/` and the CI jobs catch the skip. `npm install` installs
+# these through the `prepare` script.
+pre-commit:
+  commands:
+    # Biome, via ultracite, narrowed to the staged files. Same check CI runs
+    # (`npm run check`); `npm run fix` applies the safe fixes.
+    biome:
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx,json,jsonc,css}"
+      run: npx ultracite check {staged_files}
+    # No emdash, no emoji, in prose, comments and string literals alike.
+    prose:
+      glob: "*.{md,ts,tsx,js,jsx,mjs,cjs,json,jsonc,yml,yaml,css,sh,txt,rs,toml,py}"
+      run: node scripts/check-prose.mjs {staged_files}
+    # Formatting is the one Rust check cheap enough to run per commit; clippy
+    # stays in CI. The 5.0.0 bump broke tauri.conf.json's formatting (e56ee90),
+    # which is the class of mistake this exists for.
+    rustfmt:
+      glob: "src-tauri/**/*.rs"
+      run: cargo fmt --manifest-path src-tauri/Cargo.toml --check
+    # Never commit on main; branch first. The ruleset should reject the push
+    # anyway; this stops the commit that would need untangling first.
+    branch:
+      run: test "$(git branch --show-current)" != main
+      fail_text: "never commit on main; branch from origin/main first (AGENTS.md)"
+
+commit-msg:
+  commands:
+    # Conventional subject, lowercase imperative, no emdash, no emoji, and
+    # never a claude.ai/code/session link.
+    message:
+      run: node scripts/check-commit-message.mjs {1}
+
+pre-push:
+  commands:
+    # The two checks a red pull request is usually red for, once per push
+    # rather than once per commit so small commits stay cheap.
+    typecheck:
+      run: npm run typecheck
+    unit:
+      run: npm test -- --ci

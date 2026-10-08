@@ -62,6 +62,7 @@
     "fake-indexeddb": "^6.2.5",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
+    "lefthook": "2.1.16",
     "tailwindcss": "^4.1.16",
     "typescript": "^6.0.3",
     "ultracite": "^7.9.4"
@@ -81,7 +82,10 @@
     "wasm:versions:check": "node scripts/wasm-versions.mjs --check",
     "bench:hdrgen": "node scripts/bench-hdrgen/run.mjs",
     "test:e2e:web": "npm run build && npm --prefix e2e-web test",
-    "test:e2e:desktop": "npm --prefix e2e-tests test"
+    "test:e2e:desktop": "npm --prefix e2e-tests test",
+    "check:prose": "node scripts/check-prose.mjs --all",
+    "prepare": "lefthook install || true",
+    "typecheck": "tsc --noEmit"
   },
   "version": "5.0.0",
   "private": true,

@@ -124,7 +124,7 @@ Contributions are currently limited to those working on the Architectural Lighti
 1. Create a new issue in the GitHub repository to discuss your feature or bug fix.
 2. Fork the repository.
 3. Create a new branch for your feature or fix. The branch name should start with the issue number, e.g., `123-feature-name`.
-4. Make your changes and commit them with a clear message.
+4. Make your changes and commit them with a Conventional Commits message, e.g. `fix(viewer): keep the zoom on resize`. [CONTRIBUTING.md](./CONTRIBUTING.md) has the rules and the checks that enforce them.
 5. Push your changes to your forked repository.
 6. Create a pull request against the main repository's `main` branch.
 

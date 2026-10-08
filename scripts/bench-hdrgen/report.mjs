@@ -56,7 +56,7 @@ export function summarise(records) {
   });
 }
 
-const seconds = (ms) => (ms === null ? "—" : (ms / 1000).toFixed(1));
+const seconds = (ms) => (ms === null ? "-" : (ms / 1000).toFixed(1));
 
 export function formatTable(rows) {
   const header = ["leg", "frames", "median", "min", "max", "note"];
