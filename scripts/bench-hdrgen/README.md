@@ -56,7 +56,7 @@ Two asymmetries are deliberate and printed under the table:
   legs are handed bytes already in memory, because that is how the application
   feeds them.
 
-A cell showing `—` with a note did not finish inside the 300 s ceiling, or
+A cell showing `-` with a note did not finish inside the 300 s ceiling, or
 failed. Those are results, not missing measurements, and the note tells a
 timeout apart from an error: a hang and a crash send an investigation in
 different directions.

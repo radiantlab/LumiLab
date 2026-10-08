@@ -25,7 +25,7 @@ export const TiffImage = memo(function TiffImage({ src }: { src: string }) {
 
 		// The decode size comes from the container, so it waits for the container
 		// to have one. Inside a dialog that animates in, the first measurement can
-		// be zero, and a zero cap does not mean "do not decode" — it means "no
+		// be zero, and a zero cap does not mean "do not decode"; it means "no
 		// limit", which decodes the full picture. Once is enough: the result is
 		// scaled to fit afterwards, so a later resize needs no second decode.
 		const startDecode = () => {

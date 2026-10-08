@@ -34,7 +34,7 @@ work down to nothing:
 > Once the worker grows an OPFS tier, a "queued" frame may turn out to be a
 > cache hit that costs milliseconds, which makes dropping it pointless.
 
-It does not. The persistent lookup lives *inside* the worker —
+It does not. The persistent lookup lives *inside* the worker:
 `convertWithCache` runs in `raw-worker.ts:96`, reached only after the frame
 arrives by `postMessage`, which is to say after it has waited its entire turn
 in the queue. A frame that is a 5 ms cache hit still sits behind eight 1.9 s
@@ -44,8 +44,8 @@ So dropping queued frames did not become pointless under #243. If anything the
 queue is now the only thing standing between a returning user and an instant
 thumbnail.
 
-That observation also implies a second, larger change — resolving cache hits
-*before* they queue — which is deliberately **out of scope here**. It means
+That observation also implies a second, larger change (resolving cache hits
+*before* they queue), which is deliberately **out of scope here**. It means
 moving key derivation and the IndexedDB read out of the worker onto the page,
 or adding a peek message, and it reworks the boundary #243 has just
 established. Filed as
@@ -60,8 +60,8 @@ This is the cheapest of the three definitions #248 offered, and it recovers
 almost all of the benefit, because the waste is queue time rather than the
 ~1.9 s in flight. It is also the only one that carries no risk to sharing:
 `rawToTiff` caches the promise rather than its result, so one entry serves
-three consumers — thumbnails via `use-tiff-bytes.tsx`, dimensions via
-`generic-image-metadata.ts`, and the pipeline via `peekRawTiff` — and one
+three consumers (thumbnails via `use-tiff-bytes.tsx`, dimensions via
+`generic-image-metadata.ts`, and the pipeline via `peekRawTiff`), and one
 caller losing interest does not mean the frame is unwanted.
 
 The two rejected alternatives, recorded so they are not re-litigated:
@@ -92,7 +92,7 @@ raw-worker-client.ts    owns the queue, checks the signal before send()
 ```
 
 The UI never learns that a worker or a queue exists, which is how it already
-reaches conversion — only through `rawToTiff`. `raw-preview.ts` is the only
+reaches conversion: only through `rawToTiff`. `raw-preview.ts` is the only
 module that can both abort the conversion and forget the entry, so the drop
 API belongs there.
 
@@ -138,7 +138,7 @@ avoid:
 | Finished | `true` | `true` | Leave entirely alone |
 
 The middle row is the one that bites. Aborting an in-flight frame is already a
-no-op, since the queue check has passed — but *forgetting* it takes the entry
+no-op, since the queue check has passed, but *forgetting* it takes the entry
 out of the map while its conversion is still running. Re-add the same set,
 which is exactly what #248 describes ("drop a set and add a different one",
 or the same one from the right folder), and the frame is a miss, so a
@@ -180,8 +180,8 @@ sharing intact: there is exactly one conversion per frame and exactly one
 thing that can call it off, so no consumer can cancel a frame out from under
 the other two.
 
-`started` cannot be inferred on this side of the seam — only the queue knows
-when a frame leaves it — so the seam carries a callback back. `RawSourceIo`'s
+`started` cannot be inferred on this side of the seam (only the queue knows
+when a frame leaves it), so the seam carries a callback back. `RawSourceIo`'s
 `tiffFor` takes an options object rather than growing a third positional
 parameter:
 
@@ -194,7 +194,7 @@ tiffFor?: (
 ```
 
 `workerTiffFor` at `raw-preview.ts:47` is the default implementation and must
-forward the options to `convertRawInWorker` — the signal reaches the queue
+forward the options to `convertRawInWorker`: the signal reaches the queue
 check and `onStart` fires just past it. A test injecting its own `tiffFor` may
 ignore both, which is what makes the cache tests independent of the worker.
 
@@ -205,7 +205,7 @@ export function dropRawConversions(paths: string[]): void
 ```
 
 For each path it matches cache keys by `key === path || key.startsWith(
-`${path}|`)` — keys are `path` or `path|fingerprint` — and then applies the
+`${path}|`)` (keys are `path` or `path|fingerprint`) and then applies the
 table above: an entry that has neither `started` nor `done` is aborted and
 forgotten; anything else is left untouched.
 
@@ -252,7 +252,7 @@ it was written against and is not true of this one.
 
 What reaches it is the flow this feature exists to serve. `evictDownToBudget`
 does not skip pending entries, and `BUDGET_BYTES` is 768 MB against a
-ten-frame bracket's 673 MB — so it takes two brackets in play at once for
+ten-frame bracket's 673 MB, so it takes two brackets in play at once for
 eviction to land on a frame that is still converting. Dropping one set and
 adding another is exactly that, and it is the scenario #248 opens with. The
 fix belongs here because this feature is what makes the flow common, not
@@ -293,7 +293,7 @@ Wired to the two places that already know the user changed their mind:
 passes as `row.files.toSorted(...)`. `onRemoveIndex` at
 `image-matrix-input.tsx:238` then applies that index to the **unsorted**
 `row.files`. Removing an image therefore deletes the wrong frame whenever the
-stored order is not already sorted — which `onAdd` guarantees as soon as it
+stored order is not already sorted, which `onAdd` guarantees as soon as it
 appends a file that sorts before an existing one.
 
 This is a user-facing bug that predates this work, and it is fixed here rather
@@ -320,7 +320,7 @@ const sorted = row.files.toSorted((a, b) => a.localeCompare(b));
 
 Filtering `row.files` by identity rather than writing `sorted` back is
 deliberate. Writing the sorted array back would also *normalize the stored
-order* on the first removal, which is a behaviour change beyond the bug —
+order* on the first removal, which is a behaviour change beyond the bug:
 `onAdd` appends, so the stored array would flip between sorted and unsorted
 depending on which action the user took last. The index bug is fixed by making
 the index mean one thing; stored order is left exactly as it was.
@@ -421,7 +421,7 @@ The last two are what stop an unconditional clear from passing.
 
 ## Out of scope
 
-- Resolving persistent-cache hits before they queue —
+- Resolving persistent-cache hits before they queue:
   [#252](https://github.com/radiantlab/LumiLab/issues/252).
 - Terminating in-flight conversions, and reference-counting cache entries.
   Both rejected above, with reasons.

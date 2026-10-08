@@ -417,7 +417,7 @@ git -C ../hdrgen rev-parse HEAD
 ```
 
 Expected: `ad214f25362dd330f35c27c90d8470bd66c0fc19`. If it differs, stop and
-report — building from anything else invalidates the native column.
+report; building from anything else invalidates the native column.
 
 Then configure and build into a new directory beside the existing ones. The
 dependency sources are already downloaded under `build-web/_deps`, so pointing

@@ -15,12 +15,12 @@
 - Branch: `feat/ultracite-and-e2e-migration` (already created off `main` at commit `4f10aed`). All commits in this plan go on this branch; do not push directly to `main`.
 - Biome formatting: use Ultracite's default 2-space indent, no override. The resulting reformat is expected to touch most of the codebase and must be its own commit, separate from any behavior-affecting lint fix.
 - Cargo feature flag name for the embedded e2e driver: `e2e-driver`.
-- Only `tauri-plugin-wdio-webdriver` is in scope — not `tauri-plugin-wdio` (execute/mock/log plugin). Confirmed by reading all of `e2e-tests/test/specs/app.e2e.ts`: it never calls `browser.tauri.execute()` / `browser.tauri.mock()`, only plain WebdriverIO globals.
-- Do not add or modify any file under `src-tauri/capabilities/` — `tauri-plugin-wdio-webdriver` is an in-process HTTP server with no IPC command surface, so it needs no permission entries, and `tauri::generate_context!()` resolves capability files at compile time regardless of which Cargo features are active.
-- e2e build command stays `--debug --no-bundle` (unchanged from today) — only add `--features e2e-driver`. Debug/release is orthogonal to Cargo features; there is no reason to switch to a release build for this.
+- Only `tauri-plugin-wdio-webdriver` is in scope, not `tauri-plugin-wdio` (execute/mock/log plugin). Confirmed by reading all of `e2e-tests/test/specs/app.e2e.ts`: it never calls `browser.tauri.execute()` / `browser.tauri.mock()`, only plain WebdriverIO globals.
+- Do not add or modify any file under `src-tauri/capabilities/`: `tauri-plugin-wdio-webdriver` is an in-process HTTP server with no IPC command surface, so it needs no permission entries, and `tauri::generate_context!()` resolves capability files at compile time regardless of which Cargo features are active.
+- e2e build command stays `--debug --no-bundle` (unchanged from today); only add `--features e2e-driver`. Debug/release is orthogonal to Cargo features; there is no reason to switch to a release build for this.
 - New e2e CI job runs non-blocking (`continue-on-error: true`); it must not gate merges yet.
 - Verified package versions as of 2026-07-23: `@wdio/tauri-service` 1.2.0 (peer `webdriverio ^9.0.0`, satisfied by existing `@wdio/cli` 9.27.0), `tauri-plugin-wdio-webdriver` 1.2.0 (crates.io, confirmed via `cargo add --dry-run`), Tauri CLI 2.6.2 installed locally (`-f`/`--features` flag confirmed via `tauri build --help`).
-- Environment note for whoever executes this plan: this sandbox routes network traffic through a local proxy that breaks `gh`'s and `cargo`'s TLS/filesystem checks unless the `dangerouslyDisableSandbox` execution option is used for `gh api`/`cargo`/`git push` commands; `npm install` may also need `NPM_CONFIG_CACHE` pointed at a writable scratch directory if `~/.npm` has root-owned files from a prior `sudo npm` run. These are sandbox artifacts, not repo issues — do not "fix" them in the repo.
+- Environment note for whoever executes this plan: this sandbox routes network traffic through a local proxy that breaks `gh`'s and `cargo`'s TLS/filesystem checks unless the `dangerouslyDisableSandbox` execution option is used for `gh api`/`cargo`/`git push` commands; `npm install` may also need `NPM_CONFIG_CACHE` pointed at a writable scratch directory if `~/.npm` has root-owned files from a prior `sudo npm` run. These are sandbox artifacts, not repo issues; do not "fix" them in the repo.
 - This sandbox has no display and cannot spawn a real WebDriver session. Verification for the e2e tasks is limited to "compiles, config matches current docs, both Cargo feature states build successfully." Actually running the e2e suite end-to-end happens in CI (Task 7) or on a machine with a display.
 
 ---
@@ -81,14 +81,14 @@ npx ultracite check
 
 - [ ] **Step 2: Record the output**
 
-Note the total issue count and the top categories (e.g. `noUnusedVariables`, `noExplicitAny`, formatting-only diffs). This number is expected to be large and dominated by formatting (tabs → 2-space) — that's expected per the Global Constraints, not a problem to solve here. Report this summary before proceeding to Task 3, since Task 3 turns this into an actual diff.
+Note the total issue count and the top categories (e.g. `noUnusedVariables`, `noExplicitAny`, formatting-only diffs). This number is expected to be large and dominated by formatting (tabs → 2-space); that's expected per the Global Constraints, not a problem to solve here. Report this summary before proceeding to Task 3, since Task 3 turns this into an actual diff.
 
 ---
 
 ### Task 3: Apply Ultracite formatting and auto-fixes
 
 **Files:**
-- Modify: effectively all `.ts`/`.tsx`/`.js`/`.jsx`/`.json` source files under `src/`, `__tests__/`, root config files (`next.config.js`, `jest.config.js`, `jest.setup.js`, `tailwind`-adjacent config if present), and `e2e-tests/**/*.ts` — whatever `ultracite fix` touches. Do not hand-pick files; run it across the whole tree.
+- Modify: effectively all `.ts`/`.tsx`/`.js`/`.jsx`/`.json` source files under `src/`, `__tests__/`, root config files (`next.config.js`, `jest.config.js`, `jest.setup.js`, `tailwind`-adjacent config if present), and `e2e-tests/**/*.ts`, whatever `ultracite fix` touches. Do not hand-pick files; run it across the whole tree.
 
 **Interfaces:**
 - Consumes: `biome.jsonc` from Task 1.
@@ -119,7 +119,7 @@ Expected: `Tests: 1 passed, 1 total` (or more, if other tests exist by the time 
 ```bash
 git diff --stat | tail -5
 ```
-Report the file/line counts — this is expected to be large (whitespace reformat), which is why it's isolated to its own commit.
+Report the file/line counts; this is expected to be large (whitespace reformat), which is why it's isolated to its own commit.
 
 - [ ] **Step 5: Commit**
 
@@ -145,11 +145,11 @@ npx ultracite check
 
 - [ ] **Step 2a: If the output reports zero remaining issues**
 
-Skip the rest of this task — note in your task summary that Task 4 was a no-op — and proceed to Task 5.
+Skip the rest of this task (note in your task summary that Task 4 was a no-op) and proceed to Task 5.
 
 - [ ] **Step 2b: If issues remain**
 
-Fix each one by hand (common remaining categories after an auto-fix pass: `noExplicitAny` needing a real type, `useExhaustiveDependencies` needing a dependency array review, `noUnusedVariables` needing a decision to remove or intentionally keep with a `_`-prefixed name). Do not blanket-disable rules to make the count hit zero — if a rule is genuinely wrong for this codebase, disable it explicitly in `biome.jsonc` with a comment saying why, rather than suppressing it inline everywhere it fires.
+Fix each one by hand (common remaining categories after an auto-fix pass: `noExplicitAny` needing a real type, `useExhaustiveDependencies` needing a dependency array review, `noUnusedVariables` needing a decision to remove or intentionally keep with a `_`-prefixed name). Do not blanket-disable rules to make the count hit zero; if a rule is genuinely wrong for this codebase, disable it explicitly in `biome.jsonc` with a comment saying why, rather than suppressing it inline everywhere it fires.
 
 - [ ] **Step 3: Re-verify build and tests**
 
@@ -169,13 +169,13 @@ git commit -m "fix: resolve remaining ultracite lint violations"
 
 ### Task 5: Add the embedded WebDriver plugin behind an `e2e-driver` Cargo feature
 
-> **Deviation from the original plan, resolved with the user 2026-07-24:** `tauri-plugin-wdio-webdriver` 1.2.0 (the only published version) requires `tauri ^2.10.0`; this repo was pinned to `tauri = "2"`, resolving to `2.9.1`. Adding the optional dependency bumps `tauri` project-wide via `Cargo.lock` — Cargo does not scope lockfile entries per feature, so **this affects the default (feature-off) build too**, contrary to the Global Constraints' original assumption that this task would be isolated. The straightforward bump (tauri → 2.10.3) also does not compile on its own (a version-skew trait-bound bug between `tauri` 2.10.3 and `tauri-runtime-wry` 2.10.1). Updating both `tauri` and `tauri-runtime-wry` to their latest matching patches (`tauri` 2.11.5, `tauri-runtime-wry` 2.11.4) compiles cleanly on both the feature-off and `--features e2e-driver` build paths. The user chose to accept this bump as part of this branch rather than dropping the embedded plugin or splitting the upgrade into its own PR. Note this is **compile-verified only** — this sandbox cannot launch the GUI, so runtime behavior of the new Tauri/wry/tao versions is unverified here.
+> **Deviation from the original plan, resolved with the user 2026-07-24:** `tauri-plugin-wdio-webdriver` 1.2.0 (the only published version) requires `tauri ^2.10.0`; this repo was pinned to `tauri = "2"`, resolving to `2.9.1`. Adding the optional dependency bumps `tauri` project-wide via `Cargo.lock`: Cargo does not scope lockfile entries per feature, so **this affects the default (feature-off) build too**, contrary to the Global Constraints' original assumption that this task would be isolated. The straightforward bump (tauri → 2.10.3) also does not compile on its own (a version-skew trait-bound bug between `tauri` 2.10.3 and `tauri-runtime-wry` 2.10.1). Updating both `tauri` and `tauri-runtime-wry` to their latest matching patches (`tauri` 2.11.5, `tauri-runtime-wry` 2.11.4) compiles cleanly on both the feature-off and `--features e2e-driver` build paths. The user chose to accept this bump as part of this branch rather than dropping the embedded plugin or splitting the upgrade into its own PR. Note this is **compile-verified only**; this sandbox cannot launch the GUI, so runtime behavior of the new Tauri/wry/tao versions is unverified here.
 
 **Files:**
 - Modify: `src-tauri/Cargo.toml`
 - Modify: `src-tauri/Cargo.lock` (tauri 2.9.1 → 2.11.5, tauri-runtime-wry → 2.11.4, plus transitive updates: tao, wry, muda, tray-icon, objc2-\* on macOS, new dbus/libdbus-sys on Linux)
 - Modify: `src-tauri/src/main.rs`
-- Modify: `src-tauri/gen/schemas/*.json` (regenerated by the newer Tauri CLI/build against the updated tauri version — do not hand-edit these, they're build output)
+- Modify: `src-tauri/gen/schemas/*.json` (regenerated by the newer Tauri CLI/build against the updated tauri version; do not hand-edit these, they're build output)
 
 **Interfaces:**
 - Produces: a `e2e-driver` Cargo feature that, when passed to `cargo build`/`tauri build`, links `tauri_plugin_wdio_webdriver` and registers it on the `tauri::Builder`. Off by default. Task 6's `wdio.conf.js` build step consumes this via `--features e2e-driver`.
@@ -187,7 +187,7 @@ cd /Users/ulbrical/GitHub/LumiLab/src-tauri
 cargo add tauri-plugin-wdio-webdriver --optional
 ```
 
-This adds a line like `tauri-plugin-wdio-webdriver = { version = "1.2.0", optional = true }` under `[dependencies]`. Cargo does **not** create a custom-named feature for you — do that manually in the next step.
+This adds a line like `tauri-plugin-wdio-webdriver = { version = "1.2.0", optional = true }` under `[dependencies]`. Cargo does **not** create a custom-named feature for you; do that manually in the next step.
 
 - [ ] **Step 2: Add the `e2e-driver` feature**
 
@@ -204,7 +204,7 @@ e2e-driver = ["dep:tauri-plugin-wdio-webdriver"]
 
 - [ ] **Step 3: Register the plugin conditionally in `main.rs`**
 
-Replace the `fn main()` body in `src-tauri/src/main.rs` — currently:
+Replace the `fn main()` body in `src-tauri/src/main.rs`, currently:
 
 ```rust
 fn main() {
@@ -259,13 +259,13 @@ fn main() {
 }
 ```
 
-- [ ] **Step 4: Verify the default (feature-off) build — this protects the currently-green push-to-`main` CI path**
+- [ ] **Step 4: Verify the default (feature-off) build. This protects the currently-green push-to-`main` CI path**
 
 ```bash
 cd /Users/ulbrical/GitHub/LumiLab/src-tauri
 cargo build --release
 ```
-Expected: exits 0, and `cargo tree -e features 2>/dev/null | grep wdio` (or simply `cargo build --release --verbose 2>&1 | grep wdio`) shows no `tauri-plugin-wdio-webdriver` compilation — it must not appear in a default build.
+Expected: exits 0, and `cargo tree -e features 2>/dev/null | grep wdio` (or simply `cargo build --release --verbose 2>&1 | grep wdio`) shows no `tauri-plugin-wdio-webdriver` compilation; it must not appear in a default build.
 
 - [ ] **Step 5: Verify the feature-on build**
 
@@ -412,7 +412,7 @@ export const config = {
 };
 ```
 
-This removes the manual `tauri-driver` path resolution, the `beforeSession`/`afterSession` spawn/kill logic, and the `process.on('exit'/'SIGINT'/'SIGTERM'/'SIGHUP'/'SIGBREAK')` cleanup handlers from the old config — `@wdio/tauri-service` owns the app/driver process lifecycle now, so that code is dead weight, not a feature to preserve.
+This removes the manual `tauri-driver` path resolution, the `beforeSession`/`afterSession` spawn/kill logic, and the `process.on('exit'/'SIGINT'/'SIGTERM'/'SIGHUP'/'SIGBREAK')` cleanup handlers from the old config: `@wdio/tauri-service` owns the app/driver process lifecycle now, so that code is dead weight, not a feature to preserve.
 
 - [ ] **Step 3: Verify the file parses and the app-build step alone works**
 
@@ -425,7 +425,7 @@ Expected: both exit 0. The second command exercises exactly the build `onPrepare
 
 - [ ] **Step 4: Note the limits of what can be verified here**
 
-Running `npm --prefix e2e-tests test` end-to-end requires a display and a real WebDriver session, which this sandbox cannot provide. Do not claim the suite passes based on local execution — that verification happens in CI (Task 7) or on a developer machine. State this explicitly when reporting this task's completion.
+Running `npm --prefix e2e-tests test` end-to-end requires a display and a real WebDriver session, which this sandbox cannot provide. Do not claim the suite passes based on local execution; that verification happens in CI (Task 7) or on a developer machine. State this explicitly when reporting this task's completion.
 
 - [ ] **Step 5: Commit**
 
@@ -491,7 +491,7 @@ In `.github/workflows/test-on-pr-and-push.yml`, add this job alongside the exist
         run: npm test
 ```
 
-`continue-on-error: true` at the job level means a failure here shows up as a warning in the checks list but does not block merging — matching the "non-blocking until proven stable" decision. Linux runs the Tauri app under `xvfb-run` since there's no real display on the runner; Windows has a real desktop session already.
+`continue-on-error: true` at the job level means a failure here shows up as a warning in the checks list but does not block merging, matching the "non-blocking until proven stable" decision. Linux runs the Tauri app under `xvfb-run` since there's no real display on the runner; Windows has a real desktop session already.
 
 - [ ] **Step 2: Validate the YAML**
 
@@ -516,7 +516,7 @@ gh pr create --title "Adopt Ultracite/Biome and migrate e2e to @wdio/tauri-servi
 ## Summary
 - Adopts Ultracite/Biome for linting and formatting (2-space default; full-repo reformat is its own commit).
 - Migrates e2e-tests off a hand-rolled tauri-driver setup to @wdio/tauri-service's embedded WebDriver provider, adding macOS coverage.
-- tauri-plugin-wdio-webdriver is gated behind a new `e2e-driver` Cargo feature, off by default — confirmed via local `cargo build --release` (feature off) and `cargo build --release --features e2e-driver` (feature on) that neither path regresses.
+- tauri-plugin-wdio-webdriver is gated behind a new `e2e-driver` Cargo feature, off by default, confirmed via local `cargo build --release` (feature off) and `cargo build --release --features e2e-driver` (feature on) that neither path regresses.
 - New e2e CI job runs non-blocking (`continue-on-error: true`) on Windows and Linux until proven stable.
 
 ## Test plan
@@ -529,7 +529,7 @@ EOF
 )"
 ```
 
-This is real remote/shared-state work — confirm with the user before running Step 4, per the standing rule to check before pushing branches or opening PRs, even though the branch strategy itself was already authorized.
+This is real remote/shared-state work; confirm with the user before running Step 4, per the standing rule to check before pushing branches or opening PRs, even though the branch strategy itself was already authorized.
 
 ## Self-Review
 

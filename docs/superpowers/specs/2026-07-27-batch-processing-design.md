@@ -50,7 +50,7 @@ chose.
 
 This also puts the loop where the state already is. Per-set run records,
 continue-on-failure and stop-between-sets all need the form data, the history
-writer and the button — all of which live in the frontend. Keeping the loop in
+writer and the button, all of which live in the frontend. Keeping the loop in
 Rust would split that across the IPC boundary for no gain.
 
 ### Forward compatibility
@@ -63,7 +63,7 @@ ignorant of directories. **Not in scope here.**
 
 ## Design
 
-### 1. `run-batch.ts` — orchestration, isolated
+### 1. `run-batch.ts`: orchestration, isolated
 
 New module `src/app/home-page/run-batch.ts`. A plain async function over the
 sets, taking a per-set runner, a `shouldStop` predicate and lifecycle callbacks.
@@ -92,7 +92,7 @@ and parent references are stripped where the file is written rather than trusted
 from the caller. An empty name falls back to the current `<datetime>.hdr`, which
 keeps the single-set behaviour unchanged for anyone who does not pass one.
 
-Set names are not guaranteed unique — rows are keyed by `path.basename(fileDir)`
+Set names are not guaranteed unique: rows are keyed by `path.basename(fileDir)`
 (`image-matrix-input.tsx:110`), so two directories with the same basename
 collide today in the UI as well. The timestamp keeps the filenames distinct;
 making the names unique is out of scope.
@@ -101,7 +101,7 @@ making the names unique is out of scope.
 
 Remove the branch, `get_images_from_dir`, and the `input_images[0].is_dir()`
 sniff. Leaving it would keep a second batching implementation, unreachable, with
-different failure and progress semantics from the one being written — the kind
+different failure and progress semantics from the one being written: the kind
 of thing that gets revived or "fixed" later by someone who does not know it is
 dead.
 
@@ -147,16 +147,16 @@ It appears when there is something to say, and says only what applies:
 
 | Sets | Calibration | Dialog |
 |---|---|---|
-| 1 | complete | none — unchanged |
+| 1 | complete | none, unchanged |
 | 1 | incomplete | today's wording, unchanged |
 | many | complete | shared-settings notice |
 | many | incomplete | both, in one dialog |
 
 The shared-settings section states the count and names what is applied to every
 set: lens mask, view angles, target resolution, and the calibration files. The
-calibration wording is preserved verbatim when it applies — "Not all calibration
+calibration wording is preserved verbatim when it applies ("Not all calibration
 files have been uploaded. Did you mean to not upload them all or do you want to
-go back?" — because that phrasing was specifically agreed in #183.
+go back?"), because that phrasing was specifically agreed in #183.
 
 `usePendingConfirmation<T>` needs no change; its subject becomes a richer object.
 
@@ -179,7 +179,7 @@ configuration, which is what the loop applies to every set.
 
 ## Testing
 
-**`run-batch.ts`, with a fake runner** — this is where the behaviour lives:
+**`run-batch.ts`, with a fake runner** (this is where the behaviour lives):
 
 - runs every set, in order
 - a failing set does not stop the queue, and its failure is reported against

@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - **Read the spec first.** It records why two of the three candidate designs were rejected, and re-proposing them wastes a review cycle.
-- **TDD, strictly.** Write the test, run it, watch it fail *for the stated reason*, then implement. A test that passes on first run is testing something that already worked — fix the test.
+- **TDD, strictly.** Write the test, run it, watch it fail *for the stated reason*, then implement. A test that passes on first run is testing something that already worked; fix the test.
 - **Prose uses `--`, not an em dash.** Every comment in `src/lib/raw-*.ts` follows this. Match it.
 - **Comments explain why, not what.** This codebase's comments carry reasoning and consequences (see `raw-worker-client.ts:17-28`). Match that density; do not add narration.
 - **Run `npx jest <path>` for a single suite** and `npx jest` for the whole suite before any commit. The baseline on this branch before Task 1 is **57 suites / 384 tests**; each task should add tests and regress none. Do not derive the suite count from `--listTests`, which picks up shell-completion noise on this machine.
@@ -107,7 +107,7 @@ Run: `npx jest src/lib/raw-worker-client.test.ts -t "never sends a queued frame"
 
 Expected: FAIL at `expect(built[0]?.posts).toBe(2)` with **"Expected: 2, Received: 3"**. Today the fourth argument is ignored, so `b` is sent, `pending[1]` is `b`'s response, and `c` is then sent as a third frame.
 
-If instead it fails with a timeout, the assertion order was changed — the count assertion must come before the two `await expect(...)` lines, because a promise that can never settle times out rather than failing usefully.
+If instead it fails with a timeout, the assertion order was changed: the count assertion must come before the two `await expect(...)` lines, because a promise that can never settle times out rather than failing usefully.
 
 - [ ] **Step 3: Write the minimal implementation**
 
@@ -167,7 +167,7 @@ export function convertRawInWorker(
 }
 ```
 
-Leave the existing comment above `queue = conversion.then(...)` in place — it explains why the value is discarded on both paths, and that reasoning is unchanged.
+Leave the existing comment above `queue = conversion.then(...)` in place; it explains why the value is discarded on both paths, and that reasoning is unchanged.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
@@ -272,7 +272,7 @@ EOF
 ## Task 2: Three entry states and `dropRawConversions`
 
 **Files:**
-- Modify: `src/lib/raw-preview.ts` — `RawSourceIo` (:69-93), `Entry` (:95-99), `rawToTiff` (:112-148), `forget` (:176-182), `convert` (:184-199)
+- Modify: `src/lib/raw-preview.ts`: `RawSourceIo` (:69-93), `Entry` (:95-99), `rawToTiff` (:112-148), `forget` (:176-182), `convert` (:184-199)
 - Test: `src/lib/raw-preview.test.ts`
 
 **Interfaces:**
@@ -299,7 +299,7 @@ EOF
 
 `started` is not guaranteed on a finished frame: a converter may resolve without ever calling `onStart`, which is what #243's OPFS path does when it answers from a cached TIFF instead of converting. So `done` is what recognizes a finished entry, and the drop check has to test both flags rather than `started` alone.
 
-Forgetting an in-flight entry takes it out of the map while its conversion is still running, so re-adding the same set queues a *second* conversion of the same frame — the duplication this module caches the promise, rather than the result, to prevent. Leaning on the existing `catch → forget` instead fails the other way: a queued frame dropped and instantly re-added would hit the surviving entry and inherit its pending `AbortError`, showing a broken thumbnail for a file the user just asked for.
+Forgetting an in-flight entry takes it out of the map while its conversion is still running, so re-adding the same set queues a *second* conversion of the same frame, the duplication this module caches the promise, rather than the result, to prevent. Leaning on the existing `catch → forget` instead fails the other way: a queued frame dropped and instantly re-added would hit the surviving entry and inherit its pending `AbortError`, showing a broken thumbnail for a file the user just asked for.
 
 - [ ] **Step 1: Add the deferred IO helper to the test file**
 
@@ -372,7 +372,7 @@ This is the case that discriminates the three-state model from the two-state one
 - [ ] **Step 3: Run it to verify it fails**
 
 Run: `npx jest src/lib/raw-preview.test.ts -t "dropped in flight"`
-Expected: FAIL with **"dropRawConversions is not a function"** (it does not exist yet). Once it exists but forgets in-flight entries, this same test fails on the last line with `["/in/capt01.CR2", "/in/capt01.CR2"]` — keep that in mind, because that is the failure this test is really for.
+Expected: FAIL with **"dropRawConversions is not a function"** (it does not exist yet). Once it exists but forgets in-flight entries, this same test fails on the last line with `["/in/capt01.CR2", "/in/capt01.CR2"]`; keep that in mind, because that is the failure this test is really for.
 
 - [ ] **Step 4: Implement the entry states and the drop**
 
@@ -419,7 +419,7 @@ function workerTiffFor(
 with `import { convertRawInWorker, type RawConvertOptions } from "./raw-worker-client";`.
 
 Widen `Entry`. The two mutable flags live in their own object so that
-`convert` can be handed something to write into *before* the entry exists —
+`convert` can be handed something to write into *before* the entry exists;
 the entry needs the promise `convert` returns, so passing the entry itself
 would be circular and force a cast:
 
@@ -489,7 +489,7 @@ it has the promise:
   return tiff;
 ```
 
-`convert` takes the flags and the signal, not the entry — that is what keeps
+`convert` takes the flags and the signal, not the entry; that is what keeps
 it callable before the entry exists:
 
 ```ts
@@ -824,8 +824,8 @@ EOF
 
 ## Self-Review
 
-**Spec coverage.** Every section maps to a task: the "what cancel means" definition and the queue check to Task 1; the three-state table, `dropRawConversions`, identity-aware `forget`, the `tiffFor` seam, `workerTiffFor` forwarding and the accounting fix to Task 2; the wiring and the index bug to Task 3. The spec's error-handling section needs no task of its own — `AbortError` is thrown in Task 1 and the forget-on-drop behaviour is Task 2's. Out-of-scope items (#252, terminating in flight, reference counting) correctly have no tasks.
+**Spec coverage.** Every section maps to a task: the "what cancel means" definition and the queue check to Task 1; the three-state table, `dropRawConversions`, identity-aware `forget`, the `tiffFor` seam, `workerTiffFor` forwarding and the accounting fix to Task 2; the wiring and the index bug to Task 3. The spec's error-handling section needs no task of its own: `AbortError` is thrown in Task 1 and the forget-on-drop behaviour is Task 2's. Out-of-scope items (#252, terminating in flight, reference counting) correctly have no tasks.
 
 **Type consistency.** `RawConvertOptions` is defined in Task 1 and consumed in Task 2. `dropRawConversions(paths: string[]): void` is defined in Task 2 and called in Task 3 with `[removed]` and `row.files`, both `string[]`. `Entry`'s `started`/`done`/`controller` are introduced and used only within Task 2. `tiffFor`'s options object is structurally identical to `RawConvertOptions` but written inline in `RawSourceIo`, deliberately: importing the worker client's type into the seam would tie the injectable interface to the worker implementation, which is what the seam exists to avoid.
 
-**One thing the implementer must not smooth over.** In Task 2, the two mutable flags live in their own `EntryFlags` object rather than directly on `Entry`, and `forget` identifies an entry by that object rather than by the entry. This is not incidental style: `convert` must be handed something to write `started` into *before* the entry exists, because the entry needs the promise `convert` returns. Flattening the flags onto `Entry` reintroduces that circularity and forces either a cast on `tiff` or a forward reference to `entry` inside its own `catch`. Leaving `tiff` optional on the interface is not an acceptable escape either — every reader of a cached entry would then have to handle a state that never occurs.
+**One thing the implementer must not smooth over.** In Task 2, the two mutable flags live in their own `EntryFlags` object rather than directly on `Entry`, and `forget` identifies an entry by that object rather than by the entry. This is not incidental style: `convert` must be handed something to write `started` into *before* the entry exists, because the entry needs the promise `convert` returns. Flattening the flags onto `Entry` reintroduces that circularity and forces either a cast on `tiff` or a forward reference to `entry` inside its own `catch`. Leaving `tiff` optional on the interface is not an acceptable escape either; every reader of a cached entry would then have to handle a state that never occurs.

@@ -34,14 +34,14 @@ The pipeline moved into a worker. The preview path never did.
 
 `raw-preview.ts` does two unrelated jobs in one module:
 
-- **Caching** — dedup by fingerprint, LRU eviction against `BUDGET_BYTES`, byte
+- **Caching**: dedup by fingerprint, LRU eviction against `BUDGET_BYTES`, byte
   accounting. This has to stay on the main thread, because the cache is what
   every caller shares.
-- **Converting** — `WasmToolRunner`, `dcrawArgs`, exit-code and stderr
+- **Converting**: `WasmToolRunner`, `dcrawArgs`, exit-code and stderr
   handling. This is the half that blocks.
 
 The tangle is visible in the tests. `raw-preview.test.ts` needs a 50-line fake
-Emscripten module — `callMain`, `FS`, `HEAPU8` — to assert something as simple
+Emscripten module (`callMain`, `FS`, `HEAPU8`) to assert something as simple
 as "a frame is converted once however many callers ask for it". The cache
 tests pay for the converter's dependencies because the two share a module.
 
@@ -77,7 +77,7 @@ A single long-lived worker converts frames one at a time.
 `WasmToolRunner.clear()` clears only `files` (`wasm-runner.ts:247-249`); the
 `factories` and `compiled` maps survive. So a worker holding one runner for the
 session compiles `dcraw_emu` **once** and clears MEMFS between frames. Serial
-conversion is not a compromise being made for simplicity — it is one warm
+conversion is not a compromise being made for simplicity; it is one warm
 module doing ten frames back to back.
 
 Peak wasm heap stays at one instance, about 266 MiB. A 10-frame bracket still
@@ -94,8 +94,8 @@ in memory or lifecycle.
 
 ### Rejected: scaling to `navigator.hardwareConcurrency`
 
-Peak memory would become whatever the machine claims — 15 concurrent instances
-on a 16-core desktop is roughly 4 GB — and behaviour would differ per machine,
+Peak memory would become whatever the machine claims (15 concurrent instances
+on a 16-core desktop is roughly 4 GB), and behaviour would differ per machine,
 which is how a memory bug becomes unreproducible from a bug report.
 
 ### Rejected: reusing the pipeline worker
@@ -171,7 +171,7 @@ Unit tests as tabulated above, plus a browser regression test.
 `pipeline.spec.ts` already has the right instrument: *"the page stays
 responsive while the pipeline runs"* installs a 100 ms heartbeat and asserts no
 gap over 1 s. Pointing the same instrument at **loading a CR2 bracket** is the
-direct test for this defect — today it would record gaps of many seconds.
+direct test for this defect; today it would record gaps of many seconds.
 
 That needs a CR2 fixture reachable from `e2e-web`. The desktop suite has one,
 and `support.ts` already reads the JPEG bracket out of `../e2e-tests/test/inputs`

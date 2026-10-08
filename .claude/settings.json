@@ -1,0 +1,60 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/after-edit.mjs"],
+            "command": "node",
+            "timeout": 30,
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit|Write"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-git.mjs"],
+            "command": "node",
+            "timeout": 10,
+            "type": "command"
+          },
+          {
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-gh.mjs"],
+            "command": "node",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-edits.mjs"],
+            "command": "node",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit|Write"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/session-context.mjs"],
+            "command": "node",
+            "timeout": 15,
+            "type": "command"
+          }
+        ],
+        "matcher": "startup|resume|fork"
+      }
+    ]
+  }
+}

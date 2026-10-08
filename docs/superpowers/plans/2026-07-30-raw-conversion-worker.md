@@ -4,7 +4,7 @@
 
 **Goal:** Move `dcraw_emu` off the main thread so loading a CR2 bracket no longer freezes the tab.
 
-**Architecture:** Split `raw-preview.ts` along the seam it already has — caching stays on the main thread, converting moves out. A pure `convertRaw` module holds the argv and exit-code handling; a single long-lived worker holds one `WasmToolRunner` and takes frames in turn; the cache's injected seam changes from a `ModuleLoader` (a function, which cannot cross `postMessage`) to a `tiffFor` callback.
+**Architecture:** Split `raw-preview.ts` along the seam it already has: caching stays on the main thread, converting moves out. A pure `convertRaw` module holds the argv and exit-code handling; a single long-lived worker holds one `WasmToolRunner` and takes frames in turn; the cache's injected seam changes from a `ModuleLoader` (a function, which cannot cross `postMessage`) to a `tiffFor` callback.
 
 **Tech Stack:** TypeScript, Next.js static export, Web Workers (module workers via `new URL(..., import.meta.url)`), Emscripten `dcraw_emu`, Jest + jsdom, Playwright.
 
@@ -14,7 +14,7 @@
 
 - `src/lib/pipeline/` and `src/lib/raw-*.ts` must import no `@tauri-apps/*`. Host access is injected. Violating this breaks the browser build.
 - One `dcrawArgs`, used by the preview and the merge alike. The TIFF the preview shows and the TIFF hdrgen merges must stay byte-identical. Never introduce a second flag set.
-- **Never transfer a buffer you did not allocate.** `io.readFile` may hand back the session filesystem's own array (`vfs.ts:85`); transferring it detaches that array and empties the store. This is the defect fixed in `93ba5fc` — do not reintroduce it.
+- **Never transfer a buffer you did not allocate.** `io.readFile` may hand back the session filesystem's own array (`vfs.ts:85`); transferring it detaches that array and empties the store. This is the defect fixed in `93ba5fc`; do not reintroduce it.
 - Comments explain *why*, not *what*. This codebase's comments carry reasoning and measurements. Match that density.
 - Prose uses no em-dashes. Use `--` in comments and docs, as the surrounding code does.
 - Lint with `npx ultracite check <paths>`; autofix with `npx ultracite fix <paths>`. Keys in object literals must be alphabetically sorted (`assist/source/useSortedKeys`).
@@ -40,7 +40,7 @@ Pure move. No behaviour change, still on the main thread. This is the split that
 
 Create `src/lib/raw-convert.test.ts`. The `fakeLoader` here is lifted verbatim from `raw-preview.test.ts:21-72`.
 
-**The duplication is deliberate and lasts exactly one task.** `raw-preview.test.ts` still needs its copy for the five cache tests that remain after this task; Task 2 rewrites that file and deletes its copy, leaving this as the only one. Extracting a shared fixture module instead would leave a single-consumer helper behind after Task 2, so the copy is the cheaper path through. Do not extract it, and do not delete the original here — the suite must stay green at the end of every task.
+**The duplication is deliberate and lasts exactly one task.** `raw-preview.test.ts` still needs its copy for the five cache tests that remain after this task; Task 2 rewrites that file and deletes its copy, leaving this as the only one. Extracting a shared fixture module instead would leave a single-consumer helper behind after Task 2, so the copy is the cheaper path through. Do not extract it, and do not delete the original here; the suite must stay green at the end of every task.
 
 ```ts
 /**
@@ -185,7 +185,7 @@ describe("converting one RAW frame", () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `npx jest src/lib/raw-convert.test.ts`
-Expected: FAIL — `Cannot find module './raw-convert'`.
+Expected: FAIL, `Cannot find module './raw-convert'`.
 
 - [ ] **Step 3: Create `src/lib/raw-convert.ts`**
 
@@ -342,7 +342,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 ### Task 2: Swap the `load` seam for `tiffFor`
 
-A `ModuleLoader` is a function, and a function cannot cross `postMessage`, so it cannot survive as the injection point once conversion moves to a worker. Note that `tauriRawIo` (`src/lib/host/raw-io.ts:13-23`) never sets `load` — it is test-only in production, so this change touches no shipping caller.
+A `ModuleLoader` is a function, and a function cannot cross `postMessage`, so it cannot survive as the injection point once conversion moves to a worker. Note that `tauriRawIo` (`src/lib/host/raw-io.ts:13-23`) never sets `load`; it is test-only in production, so this change touches no shipping caller.
 
 **Files:**
 - Modify: `src/lib/raw-preview.ts` (`RawSourceIo`, `convert`)
@@ -554,7 +554,7 @@ Expected: PASS, 6 tests.
 - [ ] **Step 5: Run the full unit suite**
 
 Run: `npx jest`
-Expected: PASS. If anything outside these two files references `RawSourceIo.load`, it fails here — grep with `grep -rn "\.load" src/lib/raw-preview.ts src/lib/host/raw-io.ts` and fix.
+Expected: PASS. If anything outside these two files references `RawSourceIo.load`, it fails here; grep with `grep -rn "\.load" src/lib/raw-preview.ts src/lib/host/raw-io.ts` and fix.
 
 - [ ] **Step 6: Lint and commit**
 
@@ -594,7 +594,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Write the failing test**
 
-Create `src/lib/raw-worker-client.test.ts`. The worker double detaches what it is given via `ArrayBuffer.prototype.transfer()`, the same primitive the structured clone algorithm uses — see `src/app/home-page/pipeline-worker-client.test.ts` for the established pattern.
+Create `src/lib/raw-worker-client.test.ts`. The worker double detaches what it is given via `ArrayBuffer.prototype.transfer()`, the same primitive the structured clone algorithm uses; see `src/app/home-page/pipeline-worker-client.test.ts` for the established pattern.
 
 ```ts
 /**
@@ -761,7 +761,7 @@ describe("driving the RAW worker", () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `npx jest src/lib/raw-worker-client.test.ts`
-Expected: FAIL — `Cannot find module './raw-worker-client'`.
+Expected: FAIL, `Cannot find module './raw-worker-client'`.
 
 - [ ] **Step 3: Create `src/lib/raw-worker.types.ts`**
 
@@ -989,7 +989,7 @@ Then in `convert`, replace `io.tiffFor ?? inlineTiffFor` with `io.tiffFor ?? wor
 - [ ] **Step 8: Run the full unit suite**
 
 Run: `npx jest`
-Expected: PASS. `raw-preview.test.ts` injects `tiffFor` in every test, so no test constructs a real worker — which jsdom cannot provide.
+Expected: PASS. `raw-preview.test.ts` injects `tiffFor` in every test, so no test constructs a real worker, which jsdom cannot provide.
 
 - [ ] **Step 9: Typecheck and lint**
 
@@ -1138,7 +1138,7 @@ npm run build
 cd e2e-web && npx playwright test -g "RAW thumbnails" --project=chromium
 ```
 
-Expected: FAIL on `worst` — a main-thread conversion of three frames records a gap of several thousand milliseconds.
+Expected: FAIL on `worst`, a main-thread conversion of three frames records a gap of several thousand milliseconds.
 
 Then restore, and confirm the tree is clean apart from the two test files:
 
@@ -1150,7 +1150,7 @@ git status --short   # expect only e2e-web/tests/*.ts modified
 
 Two environment notes:
 
-- `npm run build` and `npx playwright test` both need `dangerouslyDisableSandbox` — the Next build binds a port, which the sandbox denies with `Operation not permitted (os error 1)`.
+- `npm run build` and `npx playwright test` both need `dangerouslyDisableSandbox`: the Next build binds a port, which the sandbox denies with `Operation not permitted (os error 1)`.
 - The shell's working directory persists between commands. After `cd e2e-web`, later commands are still there. Use absolute paths, or `cd` back explicitly as shown.
 
 - [ ] **Step 4: Verify it passes with the worker**
@@ -1165,7 +1165,7 @@ Expected: PASS in both WebKit and Chromium.
 - [ ] **Step 5: Run the whole browser suite**
 
 Run: `cd e2e-web && npx playwright test`
-Expected: 20 passed. The four existing pipeline specs must be unaffected — if `generates two HDR pictures from the JPEG bracket` broke, the seam change reached the JPEG path, which it should not have.
+Expected: 20 passed. The four existing pipeline specs must be unaffected; if `generates two HDR pictures from the JPEG bracket` broke, the seam change reached the JPEG path, which it should not have.
 
 - [ ] **Step 6: Lint and commit**
 
@@ -1206,7 +1206,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 | `wasmBaseUrl` resolved absolute | 3 (step 7) |
 | Cache contract, `BUDGET_BYTES`, `peekRawTiff` unchanged | 1-3 (untouched; guarded by the surviving cache tests) |
 | Browser regression test via the heartbeat | 4 |
-| CR2 fixture reachable from `e2e-web` | 4 (step 1 — confirmed present at `e2e-tests/test/inputs/CR2/`, 10 frames, 21.7 MB each) |
+| CR2 fixture reachable from `e2e-web` | 4 (step 1: confirmed present at `e2e-tests/test/inputs/CR2/`, 10 frames, 21.7 MB each) |
 
 The spec's fallback ("if the CR2 bracket is too large or too slow, assert over a single frame") is resolved: Task 4 uses three frames, which is the middle of that range.
 
