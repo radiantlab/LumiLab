@@ -3,8 +3,8 @@
 The engineering skills speak in five canonical triage roles. This repo uses the same
 strings, so the mapping is the identity. A triaged issue carries one state label
 from this table and one category label. `wontfix` predates this file; the other
-four were added for these skills, and `gh issue edit --add-label` fails on a label
-the repo does not have.
+four must exist before the first triage (`gh label create <name>`), because
+`gh issue edit --add-label` fails on a label the repo does not have.
 
 | Role (skills)     | Label here        | Meaning                                                             |
 | ----------------- | ----------------- | ------------------------------------------------------------------- |
