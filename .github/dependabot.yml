@@ -46,6 +46,10 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "webdriverio"
         update-types: ["version-update:semver-major"]
+      # 1.64's WebKit exposes OPFS, and storage-probe.spec.ts fails its control
+      # write on the CI host (#282). Lift this once the spec decides what that means.
+      - dependency-name: "@playwright/test"
+        versions: [">=1.64.0"]
     groups:
       e2e:
         patterns: ["*"]
