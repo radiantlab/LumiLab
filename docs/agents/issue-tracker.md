@@ -17,7 +17,7 @@ history.
   emdash, an emoji or a `claude.ai/code/session` link.
 - **Read an issue**: `gh issue view <number> --comments`.
 - **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq ...`
-  with `--label` and `--state` filters.
+  with `--label` filters.
 - **Comment**: `gh issue comment <number> --body "..."`.
 - **Labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`.
   The vocabulary is in [`triage-labels.md`](./triage-labels.md).

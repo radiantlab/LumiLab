@@ -11,9 +11,13 @@ agents alike.
 2. Fetch, then branch from `origin/main`, named after the issue: `123-short-name`.
 3. Commit with a Conventional Commits subject (`AGENTS.md`). Stage files by name.
 4. Push and open a pull request against `main`. The template asks what you ran.
-5. **Run the review loop.** `mattpocock-skills:code-review` until a pass raises
-   nothing unanswered, recording the pass count and each decline in the PR.
-   `AGENTS.md` says what counts as answered.
+5. **Run the review loop.** `mattpocock-skills:code-review` against `origin/main`,
+   repeated until a pass raises nothing you have not answered. Answered means fixed
+   or declined in writing, so a pass whose findings you all declined ends it. Later
+   passes review the code earlier ones made you write. Record the pass count and
+   each decline under `## Review loop` in the PR body; on a Dependabot PR, whose
+   body the bot rewrites, in a PR comment. A harness that cannot run the plugin
+   says so there and reviews the diff against `AGENTS.md` by hand.
 6. A team member reviews it; the checks go green; squash-merge. The PR title
    becomes the commit subject on `main`, so it follows the same rule.
 7. Delete the branch.

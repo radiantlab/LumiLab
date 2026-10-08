@@ -16,7 +16,7 @@ Closes #
 
 ## Review loop
 
-<!-- The loop in AGENTS.md. A declined finding gets one line with the reason. -->
+<!-- CONTRIBUTING.md step 5. A declined finding gets one line with the reason. -->
 
 - Passes:
 - Declined:

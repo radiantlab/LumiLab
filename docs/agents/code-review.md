@@ -1,8 +1,7 @@
 # Code review
 
-`mattpocock-skills:code-review` runs on every pull request, as `AGENTS.md` says,
-before a team member is asked to review. Local deltas from the skill's default
-brief:
+`mattpocock-skills:code-review` is the review loop in step 5 of `CONTRIBUTING.md`.
+Local deltas from the skill's default brief:
 
 - **The fixed point is `origin/main`.** Fetch first, so the diff is the branch's
   own commits.
