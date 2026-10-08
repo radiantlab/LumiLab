@@ -1,0 +1,7 @@
+# One compiler for CI, the release build and every contributor. Bump it in a
+# pull request of its own: a new clippy release can fail `-D warnings` on code
+# nobody touched, and that should be the only thing such a pull request shows.
+[toolchain]
+channel = "1.99.0"
+components = ["clippy", "rustfmt"]
+profile = "minimal"

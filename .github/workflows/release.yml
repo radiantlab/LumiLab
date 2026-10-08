@@ -44,11 +44,13 @@ jobs:
       release_id: ${{ steps.create.outputs.result }}
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: lts/*
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
 
       - name: Read the version
         id: version
@@ -71,7 +73,7 @@ jobs:
 
       - name: Create the draft
         id: create
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           IS_PRERELEASE: ${{ inputs.prerelease }}
           VERSION: ${{ steps.version.outputs.version }}
@@ -103,6 +105,9 @@ jobs:
   build:
     name: Build (${{ matrix.platform }})
     needs: create-release
+    # The Apple signing secrets belong on this environment, not the repository,
+    # so a run from a branch other than main cannot read them.
+    environment: release
     runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
@@ -119,18 +124,28 @@ jobs:
           - platform: windows-latest
             args: ""
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           cache: npm
-          node-version: lts/*
+          node-version-file: .nvmrc
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      # The compiler rust-toolchain.toml names, clippy and rustfmt included. Plain
+      # rustup rather than a third-party action: one less thing to pin, and
+      # it is one this release path would otherwise hand the signing secrets to.
+      - name: Install Rust
+        run: rustup toolchain install
 
-      - uses: Swatinem/rust-cache@v2
+      # Only the macOS runner builds a universal binary, so only it needs
+      # both architectures installed.
+      - name: Add the macOS targets
+        if: matrix.platform == 'macos-latest'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: release-${{ matrix.platform }}
           workspaces: src-tauri
@@ -187,7 +202,7 @@ jobs:
           echo "$APPLE_API_KEY_CONTENT" | base64 --decode > "AuthKey_${APPLE_API_KEY}.p8"
 
       - name: Build and upload
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # action-v1.0.0
         env:
           # Present only on macOS; harmless and unread elsewhere. Their
           # presence is what makes tauri-action sign and notarize.
@@ -214,7 +229,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Publish or leave as a draft
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           KEEP_DRAFT: ${{ inputs.draft }}
           RELEASE_ID: ${{ needs.create-release.outputs.release_id }}

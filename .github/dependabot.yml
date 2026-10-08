@@ -1,0 +1,77 @@
+version: 2
+
+# Security updates arrive whenever an advisory does, whatever this file says.
+# These are the routine version updates. Each ecosystem is grouped into one
+# weekly pull request, so a week's bumps cost one CI run, not ten.
+#
+# The cooldown holds back a release until it is a week old. Most compromised
+# packages are caught and pulled within days; a week also lets an upstream
+# packaging bug surface, such as @wdio/tauri-service 1.2.0 shipping a
+# native-utils that lacked an export its own code needed (f9aec38).
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 3
+    ignore:
+      # @types/node follows the Node major in .nvmrc, not the newest release.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # react and react-dom are pinned exactly, with their types overridden
+      # to match; a React bump is its own pull request.
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "@types/react"
+      - dependency-name: "@types/react-dom"
+    groups:
+      npm:
+        patterns: ["*"]
+
+  # Both e2e suites keep their own lockfile, so each needs its own entry;
+  # without one, their advisories never got a pull request at all.
+  - package-ecosystem: npm
+    directories: ["/e2e-tests", "/e2e-web"]
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 2
+    ignore:
+      # @wdio/tauri-service peers on webdriverio ^9; a WebdriverIO 10 bump
+      # breaks the desktop suite until it supports 10.
+      - dependency-name: "@wdio/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "webdriverio"
+        update-types: ["version-update:semver-major"]
+      # 1.64's WebKit exposes OPFS, and storage-probe.spec.ts fails its control
+      # write on the CI host (#282). Lift this once the spec decides what that means.
+      - dependency-name: "@playwright/test"
+        versions: [">=1.64.0"]
+    groups:
+      e2e:
+        patterns: ["*"]
+
+  - package-ecosystem: cargo
+    directory: "/src-tauri"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 2
+    groups:
+      cargo:
+        patterns: ["*"]
+
+  # Keeps the SHA-pinned actions current, with the version in the comment.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
