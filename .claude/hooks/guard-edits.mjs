@@ -2,7 +2,8 @@
  * PreToolUse on Edit and Write: the files nobody hand-edits, with the reason
  * each time so the model does the right thing instead.
  *
- * A key ending in `/` covers everything under it. Answers with the JSON deny
+ * A key ending in `/` covers everything under it, except the hand-written
+ * files in `EDITABLE`. Answers with the JSON deny
  * shape rather than exit 2 so the reason reaches the model verbatim and the
  * turn continues.
  */
@@ -21,12 +22,17 @@ const PROTECTED = new Map([
   [".env.local", "personal, untracked config; tell the user what to set"],
 ]);
 
+/** Hand-written files inside a protected directory. */
+const EDITABLE = new Set(["public/wasm/README.md"]);
+
 const input = readInput();
 const cwd = input.cwd ?? process.cwd();
 const path = repoRelative(repoRoot(cwd), input.tool_input?.file_path ?? "");
-const match = [...PROTECTED.keys()].find((key) =>
-  key.endsWith("/") ? path.startsWith(key) : path === key
-);
+const match = EDITABLE.has(path)
+  ? undefined
+  : [...PROTECTED.keys()].find((key) =>
+      key.endsWith("/") ? path.startsWith(key) : path === key
+    );
 
 if (match) {
   process.stdout.write(

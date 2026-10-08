@@ -1,70 +1,59 @@
 {
-  "extraKnownMarketplaces": {
-    "claude-plugins-official": {
-      "source": {
-        "source": "github",
-        "repo": "anthropics/claude-plugins-official"
-      }
-    }
-  },
-  "enabledPlugins": {
-    "mattpocock-skills@claude-plugins-official": true
-  },
   "hooks": {
-    "SessionStart": [
+    "PostToolUse": [
       {
-        "matcher": "startup|resume|fork",
         "hooks": [
           {
-            "type": "command",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/after-edit.mjs"],
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/session-context.mjs"],
-            "timeout": 15
+            "timeout": 30,
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "Edit|Write"
       }
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
         "hooks": [
           {
-            "type": "command",
-            "command": "node",
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-git.mjs"],
-            "timeout": 10
+            "command": "node",
+            "timeout": 10,
+            "type": "command"
           },
           {
-            "type": "command",
-            "command": "node",
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-gh.mjs"],
-            "timeout": 10
+            "command": "node",
+            "timeout": 10,
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "Bash"
       },
       {
-        "matcher": "Edit|Write",
         "hooks": [
           {
-            "type": "command",
-            "command": "node",
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-edits.mjs"],
-            "timeout": 10
+            "command": "node",
+            "timeout": 10,
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "Edit|Write"
       }
     ],
-    "PostToolUse": [
+    "SessionStart": [
       {
-        "matcher": "Edit|Write",
         "hooks": [
           {
-            "type": "command",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/session-context.mjs"],
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/after-edit.mjs"],
-            "timeout": 30
+            "timeout": 15,
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "startup|resume|fork"
       }
     ]
   }
