@@ -133,6 +133,21 @@ test("a body only the shell can produce is left to the workflow", () => {
   }
 });
 
+test("flag-like words inside quoted values are not flags", () => {
+  const ok = `gh issue create --title "Add a -b shortcut" --label feature --label needs-triage --body "$(cat <<'EOF'\n${FEATURE_BODY}\nEOF\n)"`;
+  assert.equal(runHook(ok).status, 0);
+  const task =
+    'gh issue create --title "Filter docs" --label task --body "See gh issue list -l bug for now."';
+  assert.equal(runHook(task).status, 0);
+  const short = "--label feature --label needs-triage";
+  for (const command of [
+    `gh issue create --title "x" ${short} --body "Free text, run grep -e foo first."`,
+    `gh issue create --title "Support -F in upload" ${short} --body "Free text."`,
+  ]) {
+    assert.equal(runHook(command).status, 2, command);
+  }
+});
+
 test("gh issue new and a -R pr title are checked", () => {
   assert.equal(
     runHook('gh issue new -t x -l feature -l needs-triage --body "Free."')
