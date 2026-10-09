@@ -1,0 +1,84 @@
+name: Bug
+description: Something LumiLab does that it should not. Written as a spec, so triage only has to confirm it.
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Describe behavior, not implementation. File paths are welcome where
+        they are the grep target, line numbers are not. Check the known
+        limitations in PRD.md first. See `docs/agents/issue-tracker.md`.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where it happens
+      multiple: true
+      options:
+        - Web, Chrome or Edge
+        - Web, Safari
+        - Web, Firefox
+        - Desktop, macOS
+        - Desktop, Windows
+        - Desktop, Linux
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The app version on the Settings page, or the commit for a local build.
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Pipeline stage
+      description: The step that failed or produced the wrong output. Pipeline steps first, in the order PRD.md section 4 runs them.
+      options:
+        - Staging or RAW conversion (dcraw_emu)
+        - Merge exposures (hdrgen)
+        - Nullify exposure value
+        - Crop, resize or lens mask
+        - Projection, vignetting or neutral density correction
+        - Photometric adjustment
+        - Header editing or evalglare
+        - Falsecolor
+        - Image Viewer
+        - Runs history
+        - Settings or presets
+        - Not the pipeline
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Input set
+      description: >-
+        Camera and lens, file format, number of brackets, and which .rsp and
+        .cal files were supplied. Link sample files rather than attaching RAWs.
+  - type: textarea
+    id: current
+    attributes:
+      label: Current behavior
+      description: What happens, the steps that get there, and the exact error text.
+    validations:
+      required: true
+  - type: textarea
+    id: desired
+    attributes:
+      label: Desired behavior
+      description: What should happen instead. For a numeric result, the expected value and its source.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Each one independently checkable.
+      value: |
+        - [ ]
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: The adjacent thing that is not this issue.
