@@ -15,6 +15,14 @@ open triaged issue carries one state label from this table and one category labe
 When a skill says to apply `wontfix`, close the issue as not planned and remove its
 state label.
 
-Category labels are the repo's existing ones: `bug`, `feature`, `task`, `epic`,
-`research`, `design`, `performance`, `documentation`, `housekeeping`. Area labels
-(`frontend`, `backend`, `rust`) are optional.
+Category labels: `bug`, `feature`, `task`, `research`, `performance`,
+`documentation`, `housekeeping`. A refactor is a `task`.
+
+Area labels are optional, and an issue that spans areas carries each: `frontend`
+(pages and components), `pipeline` (the WebAssembly pipeline and its worker),
+`rust` (`src-tauri/`; Dependabot applies it to cargo pull requests too).
+
+Priority labels are optional and an issue carries at most one: `p0-now` (blocks
+users or the current milestone), `p1-next` (taken up once the p0 work is done),
+`p2-later` (wanted, not scheduled). A maintainer sets the priority; a skill does
+not infer one.
