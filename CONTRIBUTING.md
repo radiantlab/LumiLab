@@ -7,9 +7,9 @@ agents alike.
 
 ## The process
 
-1. An issue first. It is the spec: say what is wrong or wanted, and where. When
-   choosing one to take, take the highest priority label first;
-   `docs/agents/triage-labels.md` defines the labels.
+1. An issue first. It is the spec: say what is wrong or wanted, and where. To
+   pick up existing work, take the issue with the highest priority label;
+   `docs/agents/triage-labels.md` defines the order.
 2. Fetch, then branch from `origin/main`, named after the issue: `123-short-name`.
 3. Commit with a Conventional Commits subject (`AGENTS.md`). Stage files by name.
 4. Push and open a pull request against `main`. The template asks what you ran.

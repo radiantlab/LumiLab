@@ -19,10 +19,10 @@ Category labels: `bug`, `feature`, `task`, `research`, `performance`,
 `documentation`, `housekeeping`. A refactor is a `task`.
 
 Area labels are optional, and an issue that spans areas carries each: `frontend`
-(pages and components), `pipeline` (the WebAssembly pipeline and its worker),
-`rust` (`src-tauri/`).
+(pages and components), `pipeline` (the WebAssembly image pipeline and its
+worker), `rust` (`src-tauri/`).
 
 Priority labels are optional and an issue carries at most one: `p0-now` (blocks
 users or the current milestone), `p1-next` (taken up once the p0 work is done),
-`p2-later` (wanted, not scheduled). A maintainer sets the priority; a skill does
-not infer one.
+`p2-later` (wanted, not scheduled). An issue without one ranks after `p2-later`.
+A maintainer sets the priority; a skill does not infer one.
