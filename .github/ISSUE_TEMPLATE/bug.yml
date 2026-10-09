@@ -44,6 +44,7 @@ body:
         - Header editing or evalglare
         - Falsecolor
         - Image Viewer
+        - Runs history
         - Settings or presets
         - Not the pipeline
     validations:
