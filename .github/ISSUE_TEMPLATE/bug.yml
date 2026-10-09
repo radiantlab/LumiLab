@@ -1,5 +1,5 @@
 name: Bug
-description: Something LumiLab does that it should not. Written so an agent can take it without a triage session.
+description: Something LumiLab does that it should not. Written as a spec, so triage only has to confirm it.
 labels: ["bug", "needs-triage"]
 body:
   - type: markdown
@@ -9,7 +9,7 @@ body:
         they are the grep target, line numbers are not. Check the known
         limitations in PRD.md first. See `docs/agents/issue-tracker.md`.
   - type: dropdown
-    id: build
+    id: platform
     attributes:
       label: Where it happens
       multiple: true
@@ -26,17 +26,18 @@ body:
     id: version
     attributes:
       label: Version
-      description: The release number, or the commit for a local build.
+      description: The app version on the Settings page, or the commit for a local build.
     validations:
       required: true
   - type: dropdown
     id: stage
     attributes:
       label: Pipeline stage
-      description: The step that failed or produced the wrong output, in pipeline order (PRD.md section 4).
+      description: The step that failed or produced the wrong output. Pipeline steps first, in the order PRD.md section 4 runs them.
       options:
         - Staging or RAW conversion (dcraw_emu)
         - Merge exposures (hdrgen)
+        - Nullify exposure value
         - Crop, resize or lens mask
         - Projection, vignetting or neutral density correction
         - Photometric adjustment
@@ -45,6 +46,8 @@ body:
         - Image Viewer
         - Settings or presets
         - Not the pipeline
+    validations:
+      required: true
   - type: textarea
     id: input
     attributes:

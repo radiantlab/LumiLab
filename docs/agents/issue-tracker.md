@@ -11,14 +11,9 @@ number (`123-short-name`). `docs/superpowers/` holds older specs and plans, kept
 history.
 
 The web UI files issues through the forms in `.github/ISSUE_TEMPLATE/`. `gh issue
-create` skips them, so a body written here uses the same `##` headings and adds the
-labels the form would:
-
-- **Bug** (`--label bug --label needs-triage`): Where it happens, Version, Pipeline
-  stage, Input set, Current behavior, Desired behavior, Acceptance criteria, Out of
-  scope.
-- **Feature** (`--label feature --label needs-triage`): Problem, Desired behavior,
-  Key interfaces, Acceptance criteria, Out of scope.
+create` skips them, so a body written here matches what a submitted form renders:
+each field's `label` from `bug.yml` or `feature.yml`, in order, as a `### ` heading,
+plus the form's `labels` as `--label` flags.
 
 ## Conventions
 

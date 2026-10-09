@@ -1,5 +1,5 @@
 name: Feature
-description: A change to what LumiLab does. Written so an agent can take it without a triage session.
+description: A change to what LumiLab does. Written as a spec, so triage only has to confirm it.
 labels: ["feature", "needs-triage"]
 body:
   - type: markdown
