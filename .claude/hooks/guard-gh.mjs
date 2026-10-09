@@ -57,7 +57,7 @@ const VALUE_FLAGS = new Set([
 // same line is still found when this one turns out to be text.
 const HEREDOC_OPEN = /<<(-?)\s*(['"]?)(\w+)\2(?=([^\n]*)\n)/g;
 // A `--body` that is the prescribed heredoc rather than text quoting one.
-const HEREDOC_BODY = /^"\$\(\s*cat\s+__HEREDOC_\d+__/;
+const HEREDOC_BODY = /^"\$\(\s*cat\s*__HEREDOC_\d+__/;
 const LEADING_TABS = /^\t+/;
 const HEREDOC_MARK = /__HEREDOC_(\d+)__/;
 const CONTINUATION = /\\\n/g;
@@ -194,10 +194,11 @@ function issueFlags(args) {
     const arg = queue.shift();
     const [, longName, attached] = LONG_WITH_VALUE.exec(arg.value) ?? [];
     const name = longName ?? arg.value;
+    // An attached value keeps its quoted source in `raw`, like a separate one.
     const takeValue = () =>
       attached === undefined
         ? queue.shift()
-        : { raw: attached, value: attached };
+        : { raw: arg.raw.slice(arg.raw.indexOf("=") + 1), value: attached };
     if (NO_BODY.has(name)) {
       flags.noBody = true;
     } else if (name === "-l" || name === "--label") {

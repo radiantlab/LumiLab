@@ -209,6 +209,13 @@ test("a heredoc example quoted inside an inline body is left alone", () => {
   assert.equal(runHook(command).status, 0);
 });
 
+test("an attached --body= heredoc is read as the body", () => {
+  for (const opener of ['--body="$(cat <<EOF', "--body \"$(cat<<'EOF'"]) {
+    const command = `gh issue create -t x --label feature --label needs-triage ${opener}\nFree text.\nEOF\n)"`;
+    assert.equal(runHook(command).status, 2, opener);
+  }
+});
+
 test("a body line ending in a backslash stays in the body", () => {
   const body = FEATURE_BODY.replace(
     "Runs cannot be exported.",
