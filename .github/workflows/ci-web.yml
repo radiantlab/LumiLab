@@ -71,6 +71,11 @@ jobs:
       - name: Unit tests
         run: npm test -- --ci
 
+      # The rule scripts and Claude Code hooks run under `node --test`, which
+      # Jest does not collect.
+      - name: Script and hook tests
+        run: npm run test:scripts
+
       - name: Check versions.json is present and well formed
         # Not `npm run wasm:versions:check`, which was here and wrong.
         # That regenerates the file from sibling *fork checkouts*

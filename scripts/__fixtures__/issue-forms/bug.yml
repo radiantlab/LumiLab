@@ -1,0 +1,33 @@
+name: Bug
+description: A fixture form for scripts/check-issue-body.test.mjs.
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: Renders nothing in a submitted issue.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where it happens
+      multiple: true
+      options:
+        - Web, Safari
+        - Desktop, macOS
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current behavior
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope

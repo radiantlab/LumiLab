@@ -13,12 +13,15 @@ history.
 The web UI files issues through the forms in `.github/ISSUE_TEMPLATE/`. `gh issue
 create` skips them, so a body written here matches what a submitted form renders:
 each field's `label` from `bug.yml` or `feature.yml`, in order, as a `### ` heading,
-plus the form's `labels` as `--label` flags.
+plus the form's `labels` as `--label` flags. `guard-gh.mjs` refuses a `gh issue
+create` that falls short and names what is missing; the `issue-body` workflow
+checks every opened issue the same way.
 
 ## Conventions
 
 - **Create an issue**: `gh issue create --title "..." --body "..."`, with a heredoc
-  for a multi-line body. `.claude/hooks/guard-gh.mjs` refuses a body with an
+  or `--body-file <path>` for a multi-line body; those are the shapes the hook
+  reads. `.claude/hooks/guard-gh.mjs` refuses a body with an
   emdash, an emoji or a `claude.ai/code/session` link.
 - **Read an issue**: `gh issue view <number> --comments`.
 - **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq ...`

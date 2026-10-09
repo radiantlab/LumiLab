@@ -32,12 +32,13 @@ the same rules still fail in CI, just later.
 | Conventional subject; no emdash, emoji or session link in the message | `commit-msg` | `guard-git.mjs` reads the `-m` text first | `ci-web` walks the PR's commits; `pr-text` checks the title and body |
 | No emdash or emoji in tracked prose and code | `pre-commit`, staged files | `after-edit.mjs` on the edited file | `ci-web`: `npm run check:prose` |
 | No session link in PR or issue text | (never sees it) | `guard-gh.mjs` refuses the command | `pr-text`, for the PR title and body |
+| A bug or feature issue has its form's sections and labels | (never sees it) | `guard-gh.mjs` refuses `gh issue create` | `issue-body` adds the form's labels, or `needs-info` and a comment |
 | Stage by name; never commit on `main` | `pre-commit` branch check | `guard-git.mjs` | the `main` ruleset, once configured |
 | No force push at `main`, `reset --hard`, `clean -f`, `branch -D` | | `guard-git.mjs` | the `main` ruleset (force push) |
 | Generated files are not hand-edited (`src-tauri/gen/`, `public/wasm/`) | | `guard-edits.mjs` | |
 | Biome clean | `pre-commit`, staged files | `after-edit.mjs` | `ci-web`: `npm run check` |
 | `cargo fmt` clean | `pre-commit`, when Rust is staged | | `ci-desktop`: Rust checks |
-| Typecheck and unit suite green | `pre-push` | | `ci-web` |
+| Typecheck, unit suite and script tests green | `pre-push` | | `ci-web` |
 | Clippy, the Tauri build on three platforms | | | `ci-desktop` |
 | Both e2e suites green | you, when a covered path changes | | `ci-web` (WebKit, Chromium), `ci-desktop` (Linux, Windows) |
 
@@ -47,6 +48,8 @@ and CI still apply.
 ## Which suites to run yourself
 
 - **Unit (`npm test`)**: always, and pre-push runs it anyway.
+- **Script and hook tests (`npm run test:scripts`)**: a change under `scripts/`,
+  `.claude/hooks/` or `.github/ISSUE_TEMPLATE/`; pre-push runs them too.
 - **Web e2e (`npm run test:e2e:web`)**: a change to anything a browser user
   touches: upload, the pipeline page, downloads, the viewer.
 - **Desktop e2e (`npm run test:e2e:desktop`)**: a change to `src/lib/host/`,
