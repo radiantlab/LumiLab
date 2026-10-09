@@ -53,8 +53,8 @@ const VALUE_FLAGS = new Set([
   "--blocking",
   "--attach",
 ]);
-const HEREDOC =
-  /<<-?\s*(['"]?)(\w+)\1([^\n]*)\n([\s\S]*?)\n\s*\2(?=[^\S\n]*$)/gm;
+const HEREDOC_OPEN = /<<(-?)\s*(['"]?)(\w+)\2([^\n]*)\n/g;
+const LEADING_TABS = /^\t+/;
 const HEREDOC_MARK = /__HEREDOC_(\d+)__/;
 const CONTINUATION = /\\\n/g;
 const BLANK = /\s/;
@@ -77,10 +77,29 @@ const REGEX_SPECIAL = /[.*+?^${}()|[\]\\]/g;
  */
 function splitHeredocs(text) {
   const bodies = [];
-  const shell = text.replace(HEREDOC, (_match, _quote, _tag, rest, body) => {
-    bodies.push(body);
-    return `__HEREDOC_${bodies.length - 1}__${rest}`;
-  });
+  let shell = "";
+  let at = 0;
+  for (const open of text.matchAll(HEREDOC_OPEN)) {
+    if (open.index < at) {
+      continue;
+    }
+    const [opener, dash, , tag, rest] = open;
+    const start = open.index + opener.length;
+    const lines = text.slice(start).split("\n");
+    // Bash ends a heredoc only at the tag alone on its line; `<<-` strips
+    // leading tabs first, never spaces.
+    let end = lines.findIndex(
+      (line) => (dash ? line.replace(LEADING_TABS, "") : line) === tag
+    );
+    end = end === -1 ? lines.length : end;
+    bodies.push(lines.slice(0, end).join("\n"));
+    shell += `${text.slice(at, open.index)}__HEREDOC_${bodies.length - 1}__${rest}`;
+    at = Math.min(
+      text.length,
+      start + lines.slice(0, end + 1).join("\n").length
+    );
+  }
+  shell += text.slice(at);
   return { bodies, shell: shell.replace(CONTINUATION, " ") };
 }
 

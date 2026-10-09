@@ -177,6 +177,15 @@ test("gh issue new and a -R pr title are checked", () => {
   );
 });
 
+test("an indented EOF inside a heredoc body does not end it", () => {
+  const body = FEATURE_BODY.replace(
+    "A CSV export on the Runs tab.",
+    "A CSV export on the Runs tab:\n\n    cat <<'EOF'\n    x\n    EOF"
+  );
+  const { status } = runHook(heredocCreate("-l feature -l needs-triage", body));
+  assert.equal(status, 0);
+});
+
 test("a body line ending in a backslash stays in the body", () => {
   const body = FEATURE_BODY.replace(
     "Runs cannot be exported.",
