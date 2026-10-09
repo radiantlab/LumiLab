@@ -40,3 +40,5 @@ pre-push:
       run: npm run typecheck
     unit:
       run: npm test -- --ci
+    scripts:
+      run: npm run test:scripts

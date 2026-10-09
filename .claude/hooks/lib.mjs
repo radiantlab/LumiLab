@@ -76,5 +76,21 @@ export async function loadRuleScripts(root) {
     import(`${root}/scripts/check-prose.mjs`),
     import(`${root}/scripts/check-commit-message.mjs`),
   ]);
-  return { ...prose, ...commit };
+  return { ...prose, ...commit, ...(await loadIssueBodyCheck(root)) };
+}
+
+/**
+ * The issue-form check, or nothing when this checkout cannot run it: a branch
+ * from before the script, or a fresh worktree with no `node_modules` for its
+ * `yaml` import. The `issue-body` workflow checks the issue either way.
+ */
+async function loadIssueBodyCheck(root) {
+  if (!existsSync(`${root}/scripts/check-issue-body.mjs`)) {
+    return {};
+  }
+  try {
+    return await import(`${root}/scripts/check-issue-body.mjs`);
+  } catch {
+    return {};
+  }
 }

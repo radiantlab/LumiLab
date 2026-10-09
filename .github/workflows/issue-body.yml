@@ -1,0 +1,58 @@
+# A bug or feature issue matches its form in .github/ISSUE_TEMPLATE/. The web
+# UI enforces that; `gh issue create` and the API skip it, and the Claude Code
+# hook (`guard-gh.mjs`) only covers sessions in this repo. This runs the
+# hook's script on every opened issue. It cannot block an issue, so it adds
+# the labels the form would have, and asks for the missing sections.
+name: issue-body
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  issue-body:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          cache: npm
+          node-version-file: .nvmrc
+      # The script reads the forms with `yaml`.
+      - run: npm ci --ignore-scripts
+      # Body and labels arrive through env, never interpolated into the
+      # script, so a body is data and cannot become shell. The comment lists
+      # field labels from the forms, never text from the body.
+      - name: Check the body against its form
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ',') }}
+        run: |
+          labels="$ISSUE_LABELS"
+          missing=$(node scripts/check-issue-body.mjs --labels "$labels" --missing-labels | paste -sd, -)
+          if [ -n "$missing" ]; then
+            gh issue edit "$ISSUE" --add-label "$missing"
+            labels="$labels,$missing"
+          fi
+          if problems=$(printf '%s' "$ISSUE_BODY" | node scripts/check-issue-body.mjs --labels "$labels" --stdin); then
+            exit 0
+          fi
+          {
+            echo "This issue is missing parts of its form in \`.github/ISSUE_TEMPLATE/\`:"
+            echo
+            printf '%s\n' "$problems" | sed 's/^/- /'
+            echo
+            echo "Edit the issue to add them, then a maintainer moves it back to \`needs-triage\`."
+          } > "$RUNNER_TEMP/comment.md"
+          # One state label at a time (docs/agents/triage-labels.md).
+          gh issue edit "$ISSUE" --add-label needs-info --remove-label needs-triage
+          gh issue comment "$ISSUE" --body-file "$RUNNER_TEMP/comment.md"

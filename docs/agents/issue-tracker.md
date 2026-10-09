@@ -13,7 +13,9 @@ history.
 The web UI files issues through the forms in `.github/ISSUE_TEMPLATE/`. `gh issue
 create` skips them, so a body written here matches what a submitted form renders:
 each field's `label` from `bug.yml` or `feature.yml`, in order, as a `### ` heading,
-plus the form's `labels` as `--label` flags.
+plus the form's `labels` as `--label` flags. `guard-gh.mjs` refuses a `gh issue
+create` that falls short and names what is missing; the `issue-body` workflow
+checks every opened issue the same way.
 
 ## Conventions
 
