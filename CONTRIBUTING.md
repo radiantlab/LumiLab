@@ -11,9 +11,16 @@ agents alike.
 2. Fetch, then branch from `origin/main`, named after the issue: `123-short-name`.
 3. Commit with a Conventional Commits subject (`AGENTS.md`). Stage files by name.
 4. Push and open a pull request against `main`. The template asks what you ran.
-5. A team member reviews it; the checks go green; squash-merge. The PR title
+5. **Run the review loop.** `mattpocock-skills:code-review` against `origin/main`,
+   repeated until a pass raises nothing you have not answered. Answered means fixed
+   or declined in writing, so a pass whose findings you all declined ends it. Later
+   passes review the code earlier ones made you write. Record the pass count and
+   each decline under `## Review loop` in the PR body; on a Dependabot PR, whose
+   body the bot rewrites, in a PR comment. A harness that cannot run the plugin
+   says so there and reviews the diff against `AGENTS.md` by hand.
+6. A team member reviews it; the checks go green; squash-merge. The PR title
    becomes the commit subject on `main`, so it follows the same rule.
-6. Delete the branch.
+7. Delete the branch.
 
 `npm install` installs the git hooks through `prepare` (lefthook). Without them
 the same rules still fail in CI, just later.
@@ -54,6 +61,11 @@ column above. A refusal is a hook naming the rule, with the reason as its
 message; fix the command rather than working around it. The `SessionStart` hook
 prints the branch, a dirty tree, the Node against `.nvmrc` and the Rust against
 `rust-toolchain.toml`.
+
+`.claude/settings.json` also enables the `mattpocock-skills` plugin from the
+official marketplace; trust the project folder and Claude Code offers to install
+it. `docs/agents/` is what its skills read about this repo: the issue tracker, the
+triage labels, the domain docs and the code-review deltas.
 
 ## Dependencies
 

@@ -49,8 +49,11 @@ A tool enforces the first five, so a refusal names the rule you hit.
   Pre-commit hook, `guard-git.mjs`.
 - **Commit body:** a sentence or two on why, or none. Use a HEREDOC for more
   than one line. Keep the `Co-Authored-By` trailer the harness supplies.
-- **Every PR gets a review from a team member**, Dependabot's included; green
-  CI is not one.
+- **Review loop on every PR, Dependabot's included, then a team member's review.**
+  Run `mattpocock-skills:code-review` against `origin/main` until a pass raises
+  nothing unanswered, and verify each finding before acting on it. Green CI and
+  the loop are not the team member's review. Step 5 of `CONTRIBUTING.md` says what
+  answered means and where the record goes.
 - **Bump the version in three places together:** `package.json`,
   `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`. `release.yml` refuses
   to build when they disagree.
@@ -60,6 +63,19 @@ A tool enforces the first five, so a refusal names the rule you hit.
 - **Check context7** for Next.js, Tauri and the WebdriverIO Tauri service rather
   than recalling them. Write no version numbers into these docs; the manifests
   have them.
+
+## Agent skills
+
+The `mattpocock-skills` plugin, enabled in `.claude/settings.json`, reads these.
+
+- Issue tracker: GitHub issues on `radiantlab/LumiLab` via `gh`; the issue is the
+  spec. `docs/agents/issue-tracker.md`.
+- Triage labels: the five canonical roles, label equal to role.
+  `docs/agents/triage-labels.md`.
+- Domain docs: single context, `CONTEXT.md` and `docs/adr/`, created as terms and
+  decisions are resolved. `docs/agents/domain.md`.
+- Code review: the fixed point, where the spec comes from, the standards sources.
+  `docs/agents/code-review.md`.
 
 ## Facts that are not obvious from the code
 
