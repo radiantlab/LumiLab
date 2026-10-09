@@ -41,6 +41,7 @@ const STATE_LABELS = new Set([
 
 const HEADING = /^### (.+)$/m;
 const FENCE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+const LINE_BREAK = /\r?\n/;
 const PROBLEMS_FOUND = 3;
 
 function loadForms(formsDir) {
@@ -54,28 +55,33 @@ function loadForms(formsDir) {
 }
 
 /**
- * `body` without its fenced code blocks, by CommonMark's rules: a backtick
- * fence's info string has no backtick, a closing fence is the same character
- * and at least as long, and an unclosed fence runs to the end.
+ * `body` with every line of its fenced code blocks indented four spaces, so
+ * a `### ` line inside one is not a heading while the section that holds the
+ * block keeps it as content. Fences by CommonMark's rules: a backtick fence's
+ * info string has no backtick, a closing fence is the same character and at
+ * least as long, and an unclosed fence runs to the end.
  */
-function withoutFences(body) {
-  const kept = [];
+function indentFences(body) {
   let open = null;
-  for (const line of body.split("\n")) {
-    const [, marker = "", info = ""] = FENCE.exec(line) ?? [];
-    if (open) {
-      const closes =
-        marker[0] === open[0] &&
-        marker.length >= open.length &&
-        info.trim() === "";
-      open = closes ? null : open;
-    } else if (marker && !(marker[0] === "`" && info.includes("`"))) {
-      open = marker;
-    } else {
-      kept.push(line);
-    }
-  }
-  return kept.join("\n");
+  return body
+    .split(LINE_BREAK)
+    .map((line) => {
+      const [, marker = "", info = ""] = FENCE.exec(line) ?? [];
+      if (open) {
+        const closes =
+          marker[0] === open[0] &&
+          marker.length >= open.length &&
+          info.trim() === "";
+        open = closes ? null : open;
+        return `    ${line}`;
+      }
+      if (marker && !(marker[0] === "`" && info.includes("`"))) {
+        open = marker;
+        return `    ${line}`;
+      }
+      return line;
+    })
+    .join("\n");
 }
 
 /**
@@ -84,7 +90,7 @@ function withoutFences(body) {
  */
 function sections(body) {
   const found = new Map();
-  const parts = withoutFences(body).split(HEADING);
+  const parts = indentFences(body).split(HEADING);
   for (let i = 1; i < parts.length; i += 2) {
     found.set(parts[i].trim(), parts[i + 1].trim());
   }

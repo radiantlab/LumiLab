@@ -14,6 +14,8 @@ const FEATURE_BODY = readFileSync(
   "utf8"
 ).trim();
 
+const STALE = "scripts/__fixtures__/issue-bodies/free-text.md";
+
 function runHook(command, cwd = ROOT, env = process.env) {
   const result = spawnSync("node", [HOOK], {
     encoding: "utf8",
@@ -105,6 +107,42 @@ test("an invocation behind an assignment, a keyword or -R is checked", () => {
   ]) {
     assert.equal(runHook(command).status, 2, command);
   }
+});
+
+test("an inline --body is read as the body", () => {
+  const create = (body) =>
+    `gh issue create -t "Export runs" --body "${body}" --label feature --label needs-triage`;
+  assert.equal(runHook(create(FEATURE_BODY)).status, 0);
+  const short = FEATURE_BODY.replace(
+    "### Problem\n\nRuns cannot be exported.\n\n",
+    ""
+  );
+  assert.equal(runHook(create(short)).status, 2);
+});
+
+test("a body only the shell can produce is left to the workflow", () => {
+  const labels = "--label feature --label needs-triage";
+  for (const command of [
+    `cat f.md | gh issue create -t x -F - ${labels}`,
+    `gh issue create -t x --body "$BODY" ${labels}`,
+    `gh issue create -t x --body "$(cat f.md)" ${labels}`,
+    // The file on disk is stale: this command rewrites it before gh runs.
+    `cat > ${STALE} <<'EOF'\n${FEATURE_BODY}\nEOF\ngh issue create -t x -F ${STALE} ${labels}`,
+  ]) {
+    assert.equal(runHook(command).status, 0, command);
+  }
+});
+
+test("gh issue new and a -R pr title are checked", () => {
+  assert.equal(
+    runHook('gh issue new -t x -l feature -l needs-triage --body "Free."')
+      .status,
+    2
+  );
+  assert.equal(
+    runHook('gh -R a/b pr create --title "Bad Title" --body "x"').status,
+    2
+  );
 });
 
 test("a body line ending in a backslash stays in the body", () => {

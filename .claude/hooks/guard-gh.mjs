@@ -23,9 +23,10 @@ import { deny, loadRuleScripts, readInput, repoRoot } from "./lib.mjs";
 
 // `-R owner/repo` may come before the subcommand.
 const PUBLISHES =
-  /\bgh\s+(?:(?:-R|--repo)(?:=|\s+)\S+\s+)?(?:(?:pr|issue)\s+(?:create|edit|comment|review|close|merge)|release\s+(?:create|edit))\b/;
+  /\bgh\s+(?:(?:-R|--repo)(?:=|\s+)\S+\s+)?(?:(?:pr|issue)\s+(?:create|new|edit|comment|review|close|merge)|release\s+(?:create|edit))\b/;
 const API_WITH_BODY = /\bgh\s+api\b[\s\S]*\bbody\b/;
-const TITLED = /\bgh\s+pr\s+(?:create|edit|merge)\b/;
+const TITLED =
+  /\bgh\s+(?:(?:-R|--repo)(?:=|\s+)\S+\s+)?pr\s+(?:create|new|edit|merge)\b/;
 const TITLE_FLAG =
   /(?:^|\s)(?:-t|--title|--subject)(?:=|\s+)(?:"((?:[^"\\]|\\.)*)"|'([^']*)')/;
 
@@ -37,7 +38,9 @@ const HEREDOC_MARK = /__HEREDOC_(\d+)__/;
 const CONTINUATION = /\\\n/g;
 // No body in the command to check: `--web` opens the form itself.
 const NO_BODY = /(?:^|\s)(?:-w|--web|-e|--editor|--recover)(?:\s|=|$)/;
-const FLAG_VALUE = String.raw`(?:=|\s+)(?:"([^"]*)"|'([^']*)'|([^\s"']+))`;
+const FLAG_VALUE = String.raw`(?:=|\s+)(?:"((?:[^"\\]|\\.)*)"|'([^']*)'|([^\s"']+))`;
+const BODY_FLAG = new RegExp(String.raw`(?:^|\s)(?:-b|--body)${FLAG_VALUE}`);
+const SHELL_ONLY = /[$`]/;
 const LABEL_FLAG = new RegExp(
   String.raw`(?:^|\s)(?:-l|--label)${FLAG_VALUE}`,
   "g"
@@ -101,18 +104,45 @@ function readRegularFile(path) {
 }
 
 /**
- * The body a `gh issue create` would publish: the `-F` file, else the first
- * heredoc after the invocation, else the shell text itself, whose `### `
- * lines are an inline body's headings. Null when the hook cannot read it.
+ * Whether the command redirects into `file`, so the copy on disk is stale by
+ * the time `gh` reads it.
  */
-function issueBody(flags, bodies, base) {
+function writesTo(shell, file) {
+  const escaped = file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(String.raw`>\s*["']?${escaped}["']?(?:\s|$)`).test(shell);
+}
+
+/**
+ * A heredoc's body when `value` holds its marker, the text of a literal
+ * value, or null for a value only the shell can produce.
+ */
+function literalOrHeredoc(value, bodies) {
+  const heredoc = HEREDOC_MARK.exec(value);
+  if (heredoc) {
+    return bodies[Number(heredoc[1])];
+  }
+  return SHELL_ONLY.test(value) ? null : value.replaceAll('\\"', '"');
+}
+
+/**
+ * The body a `gh issue create` would publish, from the shapes
+ * docs/agents/issue-tracker.md prescribes: a `-F` file, a heredoc on stdin
+ * for `-F -`, or a `--body` value, inline or a heredoc. Null when the hook
+ * cannot read it.
+ */
+function issueBody(flags, shell, bodies, base) {
   const file = BODY_FILE_FLAG.exec(flags);
-  if (file && flagValue(file) !== "-") {
-    const path = bodyFilePath(flagValue(file), base);
+  if (file) {
+    const value = flagValue(file);
+    if (value === "-") {
+      const heredoc = HEREDOC_MARK.exec(flags);
+      return heredoc ? bodies[Number(heredoc[1])] : null;
+    }
+    const path = writesTo(shell, value) ? null : bodyFilePath(value, base);
     return path === null ? null : readRegularFile(path);
   }
-  const heredoc = HEREDOC_MARK.exec(flags);
-  return heredoc ? bodies[Number(heredoc[1])] : flags;
+  const inline = BODY_FLAG.exec(flags);
+  return inline ? literalOrHeredoc(flagValue(inline), bodies) : null;
 }
 
 /**
@@ -129,7 +159,7 @@ function formProblems(text, base, check) {
   if (NO_BODY.test(flags)) {
     return [];
   }
-  const body = issueBody(flags, bodies, base);
+  const body = issueBody(flags, shell, bodies, base);
   return body === null ? [] : check(body, issueLabels(flags));
 }
 

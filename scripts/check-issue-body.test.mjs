@@ -129,3 +129,21 @@ test("fences follow CommonMark: info strings, closing length, tildes", () => {
   ).replace("_No response_", "```\nquoted\n```");
   assert.deepEqual(checkIssueBody(inline, labels, FORMS), []);
 });
+
+test("a required section answered with only a code block is not empty", () => {
+  const body = SUBMITTED_BUG.replace(
+    "The merge stalls on the third bracket.",
+    "```\nTypeError: boom\n```"
+  );
+  assert.deepEqual(checkIssueBody(body, ["bug", "needs-triage"], FORMS), []);
+});
+
+test("fences are found in a body with CRLF line endings", () => {
+  const body = SUBMITTED_BUG.replace(
+    "### Out of scope\n\n_No response_",
+    "```\n### Out of scope\n```"
+  ).replaceAll("\n", "\r\n");
+  assert.deepEqual(checkIssueBody(body, ["bug", "needs-triage"], FORMS), [
+    'missing the "### Out of scope" section from bug.yml',
+  ]);
+});
