@@ -87,11 +87,14 @@ function splitHeredocs(text) {
     const start = open.index + opener.length;
     const lines = text.slice(start).split("\n");
     // Bash ends a heredoc only at the tag alone on its line; `<<-` strips
-    // leading tabs first, never spaces.
-    let end = lines.findIndex(
+    // leading tabs first, never spaces. A `<<` with no such line, such as
+    // `out << row` in a quoted body, is text and stays where it is.
+    const end = lines.findIndex(
       (line) => (dash ? line.replace(LEADING_TABS, "") : line) === tag
     );
-    end = end === -1 ? lines.length : end;
+    if (end === -1) {
+      continue;
+    }
     bodies.push(lines.slice(0, end).join("\n"));
     shell += `${text.slice(at, open.index)}__HEREDOC_${bodies.length - 1}__${rest}`;
     at = Math.min(

@@ -186,6 +186,15 @@ test("an indented EOF inside a heredoc body does not end it", () => {
   assert.equal(status, 0);
 });
 
+test("a << without a terminator line is text, not a heredoc", () => {
+  const body = FEATURE_BODY.replace(
+    "A CSV export on the Runs tab.",
+    "A CSV export, like out << row, on the Runs tab."
+  );
+  const command = `gh issue create -t "Export runs" --label feature --label needs-triage --body "${body}"`;
+  assert.equal(runHook(command).status, 0);
+});
+
 test("a body line ending in a backslash stays in the body", () => {
   const body = FEATURE_BODY.replace(
     "Runs cannot be exported.",
