@@ -53,7 +53,11 @@ const VALUE_FLAGS = new Set([
   "--blocking",
   "--attach",
 ]);
-const HEREDOC_OPEN = /<<(-?)\s*(['"]?)(\w+)\2([^\n]*)\n/g;
+// The rest of the opener's line is a lookahead, so an opener later on the
+// same line is still found when this one turns out to be text.
+const HEREDOC_OPEN = /<<(-?)\s*(['"]?)(\w+)\2(?=([^\n]*)\n)/g;
+// A `--body` that is the prescribed heredoc rather than text quoting one.
+const HEREDOC_BODY = /^"\$\(\s*cat\s+__HEREDOC_\d+__/;
 const LEADING_TABS = /^\t+/;
 const HEREDOC_MARK = /__HEREDOC_(\d+)__/;
 const CONTINUATION = /\\\n/g;
@@ -84,7 +88,7 @@ function splitHeredocs(text) {
       continue;
     }
     const [opener, dash, , tag, rest] = open;
-    const start = open.index + opener.length;
+    const start = open.index + opener.length + rest.length + 1;
     const lines = text.slice(start).split("\n");
     // Bash ends a heredoc only at the tag alone on its line; `<<-` strips
     // leading tabs first, never spaces. A `<<` with no such line, such as
@@ -267,11 +271,12 @@ function issueBody(flags, rest, shell, bodies, base) {
   }
   if (flags.body) {
     const { raw, value } = flags.body;
-    const heredoc = heredocIn(raw, bodies);
-    if (heredoc !== null) {
-      return heredoc;
+    if (HEREDOC_BODY.test(raw)) {
+      return heredocIn(raw, bodies);
     }
-    return SHELL_ONLY.test(raw) ? null : value;
+    // A marker anywhere else is a heredoc example quoted in the text, which
+    // the marker has replaced; only the workflow sees the real body.
+    return SHELL_ONLY.test(raw) || HEREDOC_MARK.test(raw) ? null : value;
   }
   return null;
 }

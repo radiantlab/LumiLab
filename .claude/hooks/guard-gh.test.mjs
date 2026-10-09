@@ -195,6 +195,20 @@ test("a << without a terminator line is text, not a heredoc", () => {
   assert.equal(runHook(command).status, 0);
 });
 
+test("a real heredoc after a << on the same line is still read", () => {
+  const command = `gh issue create -t "out << row" --label feature --label needs-triage -F - <<'EOF'\nFree text.\nEOF`;
+  assert.equal(runHook(command).status, 2);
+});
+
+test("a heredoc example quoted inside an inline body is left alone", () => {
+  const body = FEATURE_BODY.replace(
+    "A CSV export on the Runs tab.",
+    "A CSV export, as in:\n\ncat <<END\nhi\nEND"
+  );
+  const command = `gh issue create -t "Export runs" --label feature --label needs-triage --body "${body}"`;
+  assert.equal(runHook(command).status, 0);
+});
+
 test("a body line ending in a backslash stays in the body", () => {
   const body = FEATURE_BODY.replace(
     "Runs cannot be exported.",
