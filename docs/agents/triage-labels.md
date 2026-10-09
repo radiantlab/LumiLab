@@ -20,7 +20,7 @@ Category labels: `bug`, `feature`, `task`, `research`, `performance`,
 
 Area labels are optional, and an issue that spans areas carries each: `frontend`
 (pages and components), `pipeline` (the WebAssembly pipeline and its worker),
-`rust` (`src-tauri/`; Dependabot applies it to cargo pull requests too).
+`rust` (`src-tauri/`).
 
 Priority labels are optional and an issue carries at most one: `p0-now` (blocks
 users or the current milestone), `p1-next` (taken up once the p0 work is done),
