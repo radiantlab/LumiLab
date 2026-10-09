@@ -11,10 +11,13 @@
  * and the API.
  *
  * Usage:
- *   node scripts/check-issue-body.mjs --labels <a,b> --stdin
- *       the body on stdin; prints each problem, exits 1 when there are any
- *   node scripts/check-issue-body.mjs --labels <a,b> --missing-labels
+ *   node scripts/check-issue-body.mjs --stdin --labels <a,b>
+ *       the body on stdin; prints each problem and exits 3 when there are any
+ *   node scripts/check-issue-body.mjs --missing-labels --labels <a,b>
  *       prints the labels the selected form applies that the issue lacks
+ *
+ * "Problems found" exits 3, not 1, because 1 is also what node exits with on
+ * a crash, and the workflow must not answer a broken form with `needs-info`.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -37,6 +40,8 @@ const STATE_LABELS = new Set([
 ]);
 
 const HEADING = /^### (.+)$/m;
+const FENCE = /^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[^\S\n]*$/gm;
+const PROBLEMS_FOUND = 3;
 
 function loadForms(formsDir) {
   return readdirSync(formsDir)
@@ -49,11 +54,12 @@ function loadForms(formsDir) {
 }
 
 /**
- * The `### Heading` sections of a body, as heading to trimmed content.
+ * The `### Heading` sections of a body, as heading to trimmed content. A
+ * heading inside a code fence is quoted text, not a section.
  */
 function sections(body) {
   const found = new Map();
-  const parts = body.split(HEADING);
+  const parts = body.replace(FENCE, "").split(HEADING);
   for (let i = 1; i < parts.length; i += 2) {
     found.set(parts[i].trim(), parts[i + 1].trim());
   }
@@ -68,19 +74,30 @@ function isEmpty(content) {
 }
 
 /**
+ * Label names as GitHub compares them: without regard to case.
+ */
+function normalize(labels) {
+  return labels.map((label) => label.toLowerCase());
+}
+
+/**
  * Whether `labels` carry the category of `form`, which is what puts an issue
  * under that form's rules.
  */
 function appliesTo(form, labels) {
-  return (form.labels ?? []).some(
+  return normalize(form.labels ?? []).some(
     (label) => !STATE_LABELS.has(label) && labels.includes(label)
   );
 }
 
+function labelsLacking(form, labels) {
+  return normalize(form.labels).filter((label) => !labels.includes(label));
+}
+
 function checkAgainstForm(file, form, labels, present) {
-  const problems = form.labels
-    .filter((label) => !labels.includes(label))
-    .map((label) => `missing the "${label}" label ${file} applies`);
+  const problems = labelsLacking(form, labels).map(
+    (label) => `missing the "${label}" label ${file} applies`
+  );
   for (const field of form.body) {
     const label = field.attributes?.label;
     if (!label) {
@@ -105,43 +122,52 @@ function checkAgainstForm(file, form, labels, present) {
  */
 export function checkIssueBody(body, labels, formsDir = DEFAULT_FORMS) {
   const present = sections(body);
+  const issueLabels = normalize(labels);
   return loadForms(formsDir)
-    .filter(({ form }) => appliesTo(form, labels))
-    .flatMap(({ file, form }) => checkAgainstForm(file, form, labels, present));
+    .filter(({ form }) => appliesTo(form, issueLabels))
+    .flatMap(({ file, form }) =>
+      checkAgainstForm(file, form, issueLabels, present)
+    );
 }
 
 /**
  * The labels the forms selected by `labels` apply and the issue lacks. A
- * reporter without triage rights cannot set labels from `gh` or the API, so
- * the workflow adds these itself rather than asking for them.
+ * collaborator who filed a `bug` from `gh` without `needs-triage` gets it
+ * added by the workflow rather than a request for it.
  */
 export function missingLabels(labels, formsDir = DEFAULT_FORMS) {
+  const issueLabels = normalize(labels);
   const missing = loadForms(formsDir)
-    .filter(({ form }) => appliesTo(form, labels))
-    .flatMap(({ form }) => form.labels)
-    .filter((label) => !labels.includes(label));
+    .filter(({ form }) => appliesTo(form, issueLabels))
+    .flatMap(({ form }) => labelsLacking(form, issueLabels));
   return [...new Set(missing)];
 }
 
 function main(argv) {
-  const labelsAt = argv.indexOf("--labels");
+  const [mode, flag, list = ""] = argv;
   const labels =
-    labelsAt === -1
-      ? []
-      : argv[labelsAt + 1]
+    flag === "--labels"
+      ? list
           .split(",")
           .map((label) => label.trim())
-          .filter(Boolean);
+          .filter(Boolean)
+      : [];
 
-  if (argv.includes("--missing-labels")) {
+  if (mode === "--missing-labels") {
     process.stdout.write(missingLabels(labels).join("\n"));
     return;
+  }
+  if (mode !== "--stdin") {
+    process.stderr.write(
+      "usage: check-issue-body.mjs (--stdin | --missing-labels) --labels <a,b>\n"
+    );
+    process.exit(2);
   }
 
   const problems = checkIssueBody(readFileSync(0, "utf8"), labels);
   if (problems.length > 0) {
     process.stdout.write(`${problems.join("\n")}\n`);
-    process.exit(1);
+    process.exit(PROBLEMS_FOUND);
   }
 }
 

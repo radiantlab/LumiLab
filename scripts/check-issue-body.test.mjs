@@ -87,3 +87,21 @@ test("the repository's own forms load and are checked", () => {
     problems.includes('missing the "### Pipeline stage" section from bug.yml')
   );
 });
+
+test("a heading inside a code fence is not a section", () => {
+  const body = SUBMITTED_BUG.replace(
+    "### Out of scope\n\n_No response_",
+    "```md\n### Out of scope\n```"
+  );
+  assert.deepEqual(checkIssueBody(body, ["bug", "needs-triage"], FORMS), [
+    'missing the "### Out of scope" section from bug.yml',
+  ]);
+});
+
+test("labels match without regard to case, as GitHub's do", () => {
+  const body = SUBMITTED_BUG.replace("### Version\n\n5.0.1\n\n", "");
+  assert.deepEqual(checkIssueBody(body, ["Bug", "Needs-Triage"], FORMS), [
+    'missing the "### Version" section from bug.yml',
+  ]);
+  assert.deepEqual(missingLabels(["Bug"], FORMS), ["needs-triage"]);
+});

@@ -29,7 +29,9 @@ jobs:
       # Body and labels arrive through env, never interpolated into the
       # script, so a body is data and cannot become shell. The comment lists
       # field labels from the forms, never text from the body.
+      # `shell: bash` adds pipefail, so a crash inside a pipe fails the job.
       - name: Check the body against its form
+        shell: bash
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
@@ -38,13 +40,20 @@ jobs:
           ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ',') }}
         run: |
           labels="$ISSUE_LABELS"
-          missing=$(node scripts/check-issue-body.mjs --labels "$labels" --missing-labels | paste -sd, -)
+          missing=$(node scripts/check-issue-body.mjs --missing-labels --labels "$labels" | paste -sd, -)
           if [ -n "$missing" ]; then
             gh issue edit "$ISSUE" --add-label "$missing"
             labels="$labels,$missing"
           fi
-          if problems=$(printf '%s' "$ISSUE_BODY" | node scripts/check-issue-body.mjs --labels "$labels" --stdin); then
+          # 3 is "problems found"; anything else is the check failing, which
+          # fails the job rather than asking the reporter for anything.
+          status=0
+          problems=$(printf '%s' "$ISSUE_BODY" | node scripts/check-issue-body.mjs --stdin --labels "$labels") || status=$?
+          if [ "$status" -eq 0 ]; then
             exit 0
+          fi
+          if [ "$status" -ne 3 ]; then
+            exit "$status"
           fi
           {
             echo "This issue is missing parts of its form in \`.github/ISSUE_TEMPLATE/\`:"

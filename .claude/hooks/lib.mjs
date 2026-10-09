@@ -90,7 +90,10 @@ async function loadIssueBodyCheck(root) {
   }
   try {
     return await import(`${root}/scripts/check-issue-body.mjs`);
-  } catch {
-    return {};
+  } catch (error) {
+    if (error?.code === "ERR_MODULE_NOT_FOUND") {
+      return {};
+    }
+    throw error;
   }
 }

@@ -76,7 +76,7 @@
     "lint": "ultracite check",
     "tauri": "tauri",
     "test": "jest",
-    "test:scripts": "node --test scripts/check-issue-body.test.mjs .claude/hooks/guard-gh.test.mjs",
+    "test:scripts": "node --test 'scripts/**/*.test.mjs' '.claude/hooks/*.test.mjs'",
     "test:e2e:watch": "npm --prefix e2e-tests run test:watch",
     "check": "ultracite check",
     "fix": "ultracite fix",

@@ -14,9 +14,10 @@ const FEATURE_BODY = readFileSync(
   "utf8"
 ).trim();
 
-function runHook(command, cwd = ROOT) {
+function runHook(command, cwd = ROOT, env = process.env) {
   const result = spawnSync("node", [HOOK], {
     encoding: "utf8",
+    env,
     input: JSON.stringify({ cwd, tool_input: { command } }),
   });
   return { status: result.status, stderr: result.stderr };
@@ -70,5 +71,54 @@ test("an issue without a form's category is not checked", () => {
 
 test("--web is the form itself and is not checked", () => {
   const { status } = runHook("gh issue create --web --label feature");
+  assert.equal(status, 0);
+});
+
+test("a bug issue missing required sections is refused and they are named", () => {
+  const { status, stderr } = runHook(
+    heredocCreate("--label bug --label needs-triage", "Free text.")
+  );
+  assert.equal(status, 2);
+  assert.ok(
+    stderr.includes('missing the "### Pipeline stage" section from bug.yml')
+  );
+});
+
+test("a command that only mentions gh issue create is not checked", () => {
+  const { status } = runHook(
+    'git commit -m "docs(agents): say gh issue create needs --label bug"'
+  );
+  assert.equal(status, 0);
+});
+
+test("a label flag inside the body does not select a form", () => {
+  const { status } = runHook(
+    heredocCreate("-l task", "Use gh with -l feature to file one.")
+  );
+  assert.equal(status, 0);
+});
+
+test("a flag inside the body does not skip the check", () => {
+  const { status } = runHook(
+    heredocCreate("-l feature -l needs-triage", "Run grep -e foo.")
+  );
+  assert.equal(status, 2);
+});
+
+test("a body file named through an environment variable is read", () => {
+  const env = {
+    ...process.env,
+    BODIES: join(ROOT, "scripts/__fixtures__/issue-bodies"),
+  };
+  const create = (file) =>
+    `gh issue create -t "Export runs" -l feature -l needs-triage -F "$BODIES/${file}"`;
+  assert.equal(runHook(create("feature.md"), ROOT, env).status, 0);
+  assert.equal(runHook(create("free-text.md"), ROOT, env).status, 2);
+});
+
+test("a body file the hook cannot read is left to the workflow", () => {
+  const { status } = runHook(
+    'gh issue create -t "Export runs" -l feature -l needs-triage -F missing.md'
+  );
   assert.equal(status, 0);
 });
