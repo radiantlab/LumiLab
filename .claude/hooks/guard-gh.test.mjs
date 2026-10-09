@@ -148,6 +148,23 @@ test("flag-like words inside quoted values are not flags", () => {
   }
 });
 
+test("a quoted example of gh issue create is not an invocation", () => {
+  const example = `gh issue create -l feature -l needs-triage --body "Free text"`;
+  for (const command of [
+    `gh issue comment 5 --body 'Try: ${example}'`,
+    `git commit -m 'docs(github): show ${example}'`,
+  ]) {
+    assert.equal(runHook(command).status, 0, command);
+  }
+});
+
+test("a flag's value is not read as another flag", () => {
+  const { status } = runHook(
+    'gh issue create --title "--web" -l feature -l needs-triage --body "Free text."'
+  );
+  assert.equal(status, 2);
+});
+
 test("gh issue new and a -R pr title are checked", () => {
   assert.equal(
     runHook('gh issue new -t x -l feature -l needs-triage --body "Free."')

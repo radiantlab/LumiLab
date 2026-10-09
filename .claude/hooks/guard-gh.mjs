@@ -31,7 +31,28 @@ const TITLE_FLAG =
   /(?:^|\s)(?:-t|--title|--subject)(?:=|\s+)(?:"((?:[^"\\]|\\.)*)"|'([^']*)')/;
 
 const ISSUE_CREATE =
-  /\bgh\s+(?:(?:-R|--repo)(?:=|\s+)\S+\s+)?issue\s+(?:create|new)\b/;
+  /\bgh\s+(?:(?:-R|--repo)(?:=|\s+)\S+\s+)?issue\s+(?:create|new)\b/g;
+// The other flags of `gh issue create` that take a value, which is skipped
+// so a title such as "--web" is not read as a flag.
+const VALUE_FLAGS = new Set([
+  "-t",
+  "--title",
+  "-a",
+  "--assignee",
+  "-m",
+  "--milestone",
+  "-p",
+  "--project",
+  "-T",
+  "--template",
+  "-R",
+  "--repo",
+  "--type",
+  "--parent",
+  "--blocked-by",
+  "--blocking",
+  "--attach",
+]);
 const HEREDOC =
   /<<-?\s*(['"]?)(\w+)\1([^\n]*)\n([\s\S]*?)\n\s*\2(?=[^\S\n]*$)/gm;
 const HEREDOC_MARK = /__HEREDOC_(\d+)__/;
@@ -80,6 +101,30 @@ function readQuoted(text, start) {
     i += escaped ? 2 : 1;
   }
   return { end: i + 1, value };
+}
+
+/**
+ * The first `gh issue create` in `shell` that is a command rather than text
+ * inside a quoted string, such as an example in a comment body.
+ */
+function invocationIn(shell) {
+  const quoted = [];
+  let i = 0;
+  while (i < shell.length) {
+    if (shell[i] === '"' || shell[i] === "'") {
+      const { end } = readQuoted(shell, i);
+      quoted.push([i, end]);
+      i = end;
+    } else {
+      i += shell[i] === "\\" ? 2 : 1;
+    }
+  }
+  return (
+    [...shell.matchAll(ISSUE_CREATE)].find(
+      ({ index }) =>
+        !quoted.some(([start, end]) => index > start && index < end)
+    ) ?? null
+  );
 }
 
 /**
@@ -135,6 +180,8 @@ function issueFlags(args) {
       flags.body = takeValue() ?? null;
     } else if (name === "-F" || name === "--body-file") {
       flags.bodyFile = takeValue() ?? null;
+    } else if (VALUE_FLAGS.has(name)) {
+      takeValue();
     }
   }
   flags.labels = flags.labels.map((label) => label.trim()).filter(Boolean);
@@ -213,7 +260,7 @@ function issueBody(flags, rest, shell, bodies, base) {
  */
 function formProblems(text, base, check) {
   const { bodies, shell } = splitHeredocs(text);
-  const invocation = ISSUE_CREATE.exec(shell);
+  const invocation = invocationIn(shell);
   if (!(check && invocation)) {
     return [];
   }
