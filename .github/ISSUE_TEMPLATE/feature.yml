@@ -1,0 +1,41 @@
+name: Feature
+description: A change to what LumiLab does. Written so an agent can take it without a triage session.
+labels: ["feature", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Describe behavior, not implementation. File paths are welcome where
+        they are the grep target, line numbers are not. Check PRD.md first:
+        the feature may exist or be planned. See `docs/agents/issue-tracker.md`.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What a user cannot do today, or does with friction, and who that user is (researcher, lab staff, developer).
+    validations:
+      required: true
+  - type: textarea
+    id: desired
+    attributes:
+      label: Desired behavior
+      description: What LumiLab should do afterwards, including the edge cases, on web and desktop.
+    validations:
+      required: true
+  - type: textarea
+    id: interfaces
+    attributes:
+      label: Key interfaces
+      description: The types, modules, pipeline stages or settings involved, and what changes about each. Names, not line numbers.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Each one independently checkable.
+      value: |
+        - [ ]
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: The adjacent thing that is not this issue.

@@ -10,6 +10,16 @@ where. The pull request that closes it is the plan, and its branch carries the
 number (`123-short-name`). `docs/superpowers/` holds older specs and plans, kept as
 history.
 
+The web UI files issues through the forms in `.github/ISSUE_TEMPLATE/`. `gh issue
+create` skips them, so a body written here uses the same `##` headings and adds the
+labels the form would:
+
+- **Bug** (`--label bug --label needs-triage`): Where it happens, Version, Pipeline
+  stage, Input set, Current behavior, Desired behavior, Acceptance criteria, Out of
+  scope.
+- **Feature** (`--label feature --label needs-triage`): Problem, Desired behavior,
+  Key interfaces, Acceptance criteria, Out of scope.
+
 ## Conventions
 
 - **Create an issue**: `gh issue create --title "..." --body "..."`, with a heredoc
