@@ -40,7 +40,7 @@ const STATE_LABELS = new Set([
 ]);
 
 const HEADING = /^### (.+)$/m;
-const FENCE = /^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[^\S\n]*$/gm;
+const FENCE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
 const PROBLEMS_FOUND = 3;
 
 function loadForms(formsDir) {
@@ -54,12 +54,37 @@ function loadForms(formsDir) {
 }
 
 /**
+ * `body` without its fenced code blocks, by CommonMark's rules: a backtick
+ * fence's info string has no backtick, a closing fence is the same character
+ * and at least as long, and an unclosed fence runs to the end.
+ */
+function withoutFences(body) {
+  const kept = [];
+  let open = null;
+  for (const line of body.split("\n")) {
+    const [, marker = "", info = ""] = FENCE.exec(line) ?? [];
+    if (open) {
+      const closes =
+        marker[0] === open[0] &&
+        marker.length >= open.length &&
+        info.trim() === "";
+      open = closes ? null : open;
+    } else if (marker && !(marker[0] === "`" && info.includes("`"))) {
+      open = marker;
+    } else {
+      kept.push(line);
+    }
+  }
+  return kept.join("\n");
+}
+
+/**
  * The `### Heading` sections of a body, as heading to trimmed content. A
  * heading inside a code fence is quoted text, not a section.
  */
 function sections(body) {
   const found = new Map();
-  const parts = body.replace(FENCE, "").split(HEADING);
+  const parts = withoutFences(body).split(HEADING);
   for (let i = 1; i < parts.length; i += 2) {
     found.set(parts[i].trim(), parts[i + 1].trim());
   }

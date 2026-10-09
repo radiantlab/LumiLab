@@ -105,3 +105,27 @@ test("labels match without regard to case, as GitHub's do", () => {
   ]);
   assert.deepEqual(missingLabels(["Bug"], FORMS), ["needs-triage"]);
 });
+
+test("fences follow CommonMark: info strings, closing length, tildes", () => {
+  const fenced = (open, close) =>
+    SUBMITTED_BUG.replace(
+      "### Out of scope\n\n_No response_",
+      `${open}\n### Out of scope\n${close}`
+    );
+  const outOfScope = ['missing the "### Out of scope" section from bug.yml'];
+  const labels = ["bug", "needs-triage"];
+  assert.deepEqual(
+    checkIssueBody(fenced("```", "````"), labels, FORMS),
+    outOfScope
+  );
+  assert.deepEqual(
+    checkIssueBody(fenced("~~~", "~~~"), labels, FORMS),
+    outOfScope
+  );
+  // A backtick in the info string means the line opens no fence.
+  const inline = SUBMITTED_BUG.replace(
+    "5.0.1",
+    "5.0.1, after ```npm run dev``` fails"
+  ).replace("_No response_", "```\nquoted\n```");
+  assert.deepEqual(checkIssueBody(inline, labels, FORMS), []);
+});

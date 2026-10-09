@@ -84,10 +84,35 @@ test("a bug issue missing required sections is refused and they are named", () =
   );
 });
 
-test("a command that only mentions gh issue create is not checked", () => {
+test("a command that mentions gh issue create without a category is not checked", () => {
   const { status } = runHook(
-    'git commit -m "docs(agents): say gh issue create needs --label bug"'
+    'git commit -m "docs(agents): say when to run gh issue create"'
   );
+  assert.equal(status, 0);
+});
+
+test("labels after a heredoc body still select the form", () => {
+  const command = `gh issue create -t "Export runs" --body "$(cat <<'EOF'\nFree text.\nEOF\n)" --label feature --label needs-triage`;
+  assert.equal(runHook(command).status, 2);
+});
+
+test("an invocation behind an assignment, a keyword or -R is checked", () => {
+  const flags = '-l feature -l needs-triage --body "Free text."';
+  for (const command of [
+    `GH_REPO=a/b gh issue create ${flags}`,
+    `if true; then gh issue create ${flags}; fi`,
+    `gh -R radiantlab/LumiLab issue create ${flags}`,
+  ]) {
+    assert.equal(runHook(command).status, 2, command);
+  }
+});
+
+test("a body line ending in a backslash stays in the body", () => {
+  const body = FEATURE_BODY.replace(
+    "Runs cannot be exported.",
+    "Runs cannot be exported. \\"
+  );
+  const { status } = runHook(heredocCreate("-l feature -l needs-triage", body));
   assert.equal(status, 0);
 });
 
@@ -117,8 +142,13 @@ test("a body file named through an environment variable is read", () => {
 });
 
 test("a body file the hook cannot read is left to the workflow", () => {
-  const { status } = runHook(
-    'gh issue create -t "Export runs" -l feature -l needs-triage -F missing.md'
-  );
-  assert.equal(status, 0);
+  const create = (file) =>
+    `gh issue create -t "Export runs" -l feature -l needs-triage -F ${file}`;
+  for (const command of [
+    create("missing.md"),
+    create("scripts"),
+    `f=$(mktemp); ${create('"$f"')}`,
+  ]) {
+    assert.equal(runHook(command).status, 0, command);
+  }
 });

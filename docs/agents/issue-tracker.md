@@ -20,7 +20,8 @@ checks every opened issue the same way.
 ## Conventions
 
 - **Create an issue**: `gh issue create --title "..." --body "..."`, with a heredoc
-  for a multi-line body. `.claude/hooks/guard-gh.mjs` refuses a body with an
+  or `--body-file <path>` for a multi-line body; those are the shapes the hook
+  reads. `.claude/hooks/guard-gh.mjs` refuses a body with an
   emdash, an emoji or a `claude.ai/code/session` link.
 - **Read an issue**: `gh issue view <number> --comments`.
 - **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq ...`
