@@ -10,8 +10,8 @@
     "report": "playwright show-report"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
-    "serve": "^14.2.6"
+    "@playwright/test": "^1.63.0",
+    "serve": "^14.2.7"
   },
   "overrides": {
     "compression": "1.8.2"
